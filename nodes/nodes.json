@@ -1,0 +1,18 @@
+{
+  "nodes": [
+    {
+      "id": "blockchain_intro",
+      "title": "What is Blockchain?",
+      "category": "technology",
+      "summary": "Blockchain is a distributed digital ledger that records transactions securely without a central authority.",
+      "tags": ["crypto", "web3", "finance"]
+    },
+    {
+      "id": "digital_economy",
+      "title": "Digital Economy",
+      "category": "economics",
+      "summary": "The digital economy refers to economic activity driven by digital technologies, platforms, and online markets.",
+      "tags": ["internet", "innovation"]
+    }
+  ]
+}
