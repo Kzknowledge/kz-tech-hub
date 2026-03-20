@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Kimiyyar Zahiri Tech Hub</title>
+<link rel="stylesheet" href="../styles/style.css">
+</head>
+
+<body>
+
+<h1>Kimiyyar Zahiri Tech Hub</h1>
+
+<input id="query" placeholder="Ask a research question">
+
+<button onclick="research()">Research</button>
+
+<pre id="output"></pre>
+
+<script>
+
+async function research(){
+
+const q = document.getElementById("query").value
+
+const res = await fetch(`/research?q=${q}`)
+
+const data = await res.json()
+
+document.getElementById("output").innerText =
+JSON.stringify(data,null,2)
+
+}
+
+</script>
+
+</body>
+</html>
