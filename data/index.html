@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Kimiyyar Zahiri Tech Hub</title>
+        <link rel="stylesheet" href="style.css">
+          <link rel="manifest" href="manifest.json">
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/vis-network.min.js"></script>
+              <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/dist/vis-network.min.css">
+              </head>
+              <body>
+
+                <header class="kz-header">
+                    <div class="kz-logo">KZ</div>
+                        <div class="kz-brand">
+                              <h1>Kimiyyar Zahiri</h1>
+                                    <p>Fahimta. Aminci. Ci Gaba.</p>
+                                        </div>
+                                            <button class="kz-lang" id="langToggle">🌙 Hausa</button>
+                                              </header>
+
+                                                <div class="kz-layout">
+
+                                                    <div id="kz-graph"></div>
+
+                                                        <div id="kz-panel" class="kz-panel hidden">
+                                                              <button class="panel-close" id="panelClose">✕ Close</button>
+
+                                                                    <div class="panel-cat" id="panelCat"></div>
+                                                                          <h2 id="panelTitle"></h2>
+                                                                                <p id="panelSummary"></p>
+                                                                                      <div class="panel-meta" id="panelMeta"></div>
+
+                                                                                            <div class="action-grid">
+                                                                                                    <button onclick="runAction('research')">🔍 Research</button>
+                                                                                                            <button onclick="runAction('learn')">📖 Learn</button>
+                                                                                                                    <button onclick="runAction('automate')">⚙️ Automate</button>
+                                                                                                                            <button onclick="runAction('content')">🐦 Content</button>
+                                                                                                                                    <button onclick="runAction('track')">📊 Track</button>
+                                                                                                                                          </div>
+
+                                                                                                                                                <div id="aiSection" class="ai-section hidden">
+                                                                                                                                                        <div class="ai-header">
+                                                                                                                                                                  <span id="aiLabel"></span>
+                                                                                                                                                                            <a id="waShare" href="#" target="_blank" class="wa-btn">📤 WhatsApp</a>
+                                                                                                                                                                                    </div>
+                                                                                                                                                                                            <div id="aiLoading" class="ai-loading hidden">⏳ Generating...</div>
+                                                                                                                                                                                                    <div id="aiOutput" class="ai-output"></div>
+                                                                                                                                                                                                          </div>
+
+                                                                                                                                                                                                              </div>
+                                                                                                                                                                                                                </div>
+
+                                                                                                                                                                                                                  <script src="app.js"></script>
+                                                                                                                                                                                                                  </body>
+                                                                                                                                                                                                                  </html>
