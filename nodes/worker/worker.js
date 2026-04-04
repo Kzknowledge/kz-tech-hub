@@ -1,27 +1,63 @@
+const ALLOWED_ORIGIN = 'https://kz-tech-hub.vercel.app';
+const CACHE_TTL = 86400; // 24 hours
+const MAX_TOKENS = 1000;
+
 export default {
-  async fetch(request, env) {
+  async fetch(req, env) {
+    const origin = req.headers.get('Origin');
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    };
 
-    const url = new URL(request.url)
+    if (req.method === 'OPTIONS')
+      return new Response(null, { headers: corsHeaders });
 
-    if (url.pathname === "/research") {
+    try {
+      const body = await req.json();
 
-      const query = url.searchParams.get("q")
+      // Check KV cache first
+      const cacheKey = btoa(JSON.stringify(body.messages)).slice(0, 128);
+      const cached = await env.KZ_CACHE.get(cacheKey);
+      if (cached) {
+        return new Response(cached, {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json',
+                     'X-KZ-Cache': 'HIT' }
+        });
+      }
 
-      const ai = await env.AI.run(
-        "@cf/meta/llama-3-8b-instruct",
-        {
-          messages: [
-            { role: "system", content: "You are an AI research assistant for the Kimiyyar Zahiri Tech Hub." },
-            { role: "user", content: query }
-          ]
-        }
-      )
+      // Forward to Claude API
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': env.CLAUDE_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: MAX_TOKENS,
+          ...body
+        })
+      });
 
-      return new Response(JSON.stringify(ai), {
-        headers: { "Content-Type": "application/json" }
-      })
+      const data = await res.text();
+
+      // Store in KV cache for 24h
+      await env.KZ_CACHE.put(cacheKey, data, { expirationTtl: CACHE_TTL });
+
+      return new Response(data, {
+        status: res.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json',
+                   'X-KZ-Cache': 'MISS' }
+      });
+
+    } catch (e) {
+      return new Response(
+        JSON.stringify({ error: e.message }),
+        { status: 500, headers: corsHeaders }
+      );
     }
-
-    return new Response("KZ AI Worker Running")
   }
-}
+};
