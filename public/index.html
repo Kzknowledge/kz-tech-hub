@@ -1,36 +1,2518 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" dir="ltr">
 <head>
-<title>Kimiyyar Zahiri Tech Hub</title>
-<link rel="stylesheet" href="../styles/style.css">
-</head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="description" content="Kimiyyar Zahiri Tech Hub — AI-powered knowledge graph for digital education in Northern Nigeria. Free. Bilingual. Islamic finance aware.">
+<meta name="theme-color" content="#C5760A">
+<meta property="og:title" content="Kimiyyar Zahiri Tech Hub · Knowledge Graph OS">
+<meta property="og:description" content="AI-powered knowledge graph for Arewa digital education. Free, bilingual, built on a phone.">
+<title>Kimiyyar Zahiri Tech Hub · Knowledge Graph OS</title>
 
-<body>
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Scheherazade+New:wght@400;600;700&display=swap" rel="stylesheet">
 
-<h1>Kimiyyar Zahiri Tech Hub</h1>
+<!-- Vis.js Network -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.6/vis-network.min.js"></script>
+<link  href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.6/dist/vis-network.min.css" rel="stylesheet">
 
-<input id="query" placeholder="Ask a research question">
+<style>
+/* ══════════════════════════════════════════
+   DESIGN TOKENS — SCHOLARLY AREWA
+══════════════════════════════════════════ */
+:root {
+  /* Canvas */
+  --white:  #FFFFFF;
+  --p1:     #F9F5EE;
+  --p2:     #F2EBD9;
+  --p3:     #E8DDC5;
+  --p4:     #DCCFB0;
 
-<button onclick="research()">Research</button>
+  /* Gold / Amber — primary identity colour */
+  --gold:   #C5760A;
+  --gold2:  #E8900F;
+  --gold3:  #F5AF3A;
+  --gold-d: rgba(197,118,10,.10);
+  --gold-g: rgba(197,118,10,.28);
+  --gold-b: rgba(197,118,10,.20);
 
-<pre id="output"></pre>
+  /* Supporting palette */
+  --green:  #1A6B3A;
+  --green-d:rgba(26,107,58,.10);
+  --blue:   #1A3E8C;
+  --blue-d: rgba(26,62,140,.10);
+  --purple: #6B2A8C;
+  --purple-d:rgba(107,42,140,.10);
+  --red:    #8C1A1A;
+  --red-d:  rgba(140,26,26,.10);
+  --teal:   #0A7070;
+  --teal-d: rgba(10,112,112,.10);
 
-<script>
+  /* Typography */
+  --ink:    #1E1509;
+  --ink2:   rgba(30,21,9,.65);
+  --ink3:   rgba(30,21,9,.38);
+  --ink4:   rgba(30,21,9,.12);
+  --rule:   rgba(30,21,9,.07);
+  --border: rgba(197,118,10,.22);
 
-async function research(){
+  /* Fonts */
+  --serif:  'Amiri', Georgia, serif;
+  --mono:   'IBM Plex Mono', 'Courier New', monospace;
+  --arab:   'Scheherazade New', serif;
 
-const q = document.getElementById("query").value
-
-const res = await fetch(`/research?q=${q}`)
-
-const data = await res.json()
-
-document.getElementById("output").innerText =
-JSON.stringify(data,null,2)
-
+  /* Layout */
+  --nav-h:  52px;
+  --hub-h:  40px;
+  --lp-w:   290px;
+  --rp-w:   310px;
+  --r:      10px;
+  --rs:     6px;
+  --shadow: 0 1px 3px rgba(30,21,9,.07), 0 3px 12px rgba(30,21,9,.05);
+  --shadow-md: 0 4px 20px rgba(30,21,9,.11);
+  --ease:   cubic-bezier(.4,0,.2,1);
 }
 
-</script>
+/* ══════════════════════════════════════════
+   RESET + BASE
+══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--mono);
+  background: var(--white);
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.65;
+  display: flex;
+  flex-direction: column;
+}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+button, input, textarea, select {
+  font-family: var(--mono);
+  font-size: inherit;
+}
 
+/* ══════════════════════════════════════════
+   NAV
+══════════════════════════════════════════ */
+.nav {
+  height: var(--nav-h);
+  min-height: var(--nav-h);
+  background: var(--white);
+  border-bottom: 2px solid var(--gold);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 12px rgba(30,21,9,.07);
+}
+
+/* Brand mark */
+.kz-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.kz-seal {
+  width: 36px;
+  height: 36px;
+  border-radius: 7px;
+  background: var(--gold);
+  color: #fff;
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 2px 2px 0 var(--gold2), 0 0 0 1px var(--gold-b);
+  flex-shrink: 0;
+}
+.kz-seal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent 0 3px,
+    rgba(255,255,255,.12) 3px 4px
+  );
+}
+.kz-brand-text { display: flex; flex-direction: column; }
+.kz-name {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.15;
+  letter-spacing: .2px;
+}
+.kz-sub {
+  font-size: 9px;
+  color: var(--gold);
+  font-family: var(--arab);
+  direction: rtl;
+  text-align: left;
+}
+
+/* Pipeline breadcrumb */
+.pipe {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  justify-content: center;
+  overflow-x: auto;
+}
+.pipe-step {
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: .3px;
+  color: var(--ink3);
+  padding: 3px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  transition: all .2s;
+}
+.pipe-step.done   { color: var(--green); }
+.pipe-step.active { color: var(--gold); background: var(--gold-d); }
+.pipe-arr { font-size: 9px; color: var(--ink3); flex-shrink: 0; }
+
+/* Nav right */
+.nav-r {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.live { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.28} }
+
+.n-stat {
+  font-size: 10px;
+  color: var(--ink3);
+  padding: 3px 7px;
+  border: 1px solid var(--ink4);
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.n-stat b { color: var(--gold); }
+
+.n-btn {
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--ink4);
+  background: transparent;
+  color: var(--ink3);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.n-btn:hover { background: var(--p1); color: var(--ink); border-color: var(--border); }
+.n-btn.gold  { border-color: var(--gold-b); color: var(--gold); background: var(--gold-d); }
+.n-btn.gold:hover { background: rgba(197,118,10,.18); }
+
+/* Lang toggle */
+.lang-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.lang-btn {
+  padding: 4px 9px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--ink3);
+  transition: all .15s;
+}
+.lang-btn.active { background: var(--gold); color: #fff; }
+
+/* ══════════════════════════════════════════
+   WORKSPACE — 3-COLUMN GRID
+══════════════════════════════════════════ */
+.workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: var(--lp-w) 1fr var(--rp-w);
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+/* ══════════════════════════════════════════
+   LEFT PANEL
+══════════════════════════════════════════ */
+.lp {
+  background: var(--p1);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.panel-head {
+  padding: 10px 13px 9px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.panel-head-accent { color: var(--gold); font-size: 11px; }
+.panel-body { flex: 1; overflow-y: auto; padding: 12px; }
+
+/* Research box */
+.research-box {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+.rb-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.rb-input {
+  width: 100%;
+  background: var(--p1);
+  border: 1px solid var(--ink4);
+  border-radius: var(--rs);
+  padding: 8px 10px;
+  color: var(--ink);
+  font-size: 12px;
+  outline: none;
+  resize: none;
+  height: 64px;
+  line-height: 1.55;
+  transition: border-color .18s;
+}
+.rb-input:focus { border-color: var(--gold); background: var(--white); }
+.rb-input::placeholder { color: var(--ink3); }
+.rb-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--gold);
+  color: #fff;
+  border: none;
+  border-radius: var(--rs);
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .5px;
+  cursor: pointer;
+  transition: all .18s var(--ease);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.rb-btn:hover { background: var(--gold2); box-shadow: 0 3px 12px var(--gold-g); }
+.rb-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Research output */
+.r-out-wrap {
+  background: var(--white);
+  border: 1px solid var(--green-d);
+  border-radius: var(--r);
+  margin-bottom: 12px;
+  overflow: hidden;
+  display: none;
+  animation: slideDown .22s var(--ease);
+}
+.r-out-wrap.open { display: block; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+.r-out-hdr {
+  padding: 8px 12px;
+  background: var(--green-d);
+  border-bottom: 1px solid rgba(26,107,58,.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: .8px;
+}
+.r-out-close {
+  width: 18px; height: 18px; border-radius: 4px;
+  background: var(--white); border: 1px solid var(--rule);
+  color: var(--ink3); font-size: 12px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: color .15s;
+}
+.r-out-close:hover { color: var(--ink); }
+.r-out-body {
+  padding: 12px;
+  font-size: 12px;
+  color: var(--ink2);
+  line-height: 1.75;
+  white-space: pre-wrap;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.r-out-loading {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--ink3);
+}
+.dots span {
+  display: inline-block;
+  width: 5px; height: 5px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: bounce-d 1.1s infinite;
+  margin: 0 1px;
+}
+.dots span:nth-child(2) { animation-delay: .18s; }
+.dots span:nth-child(3) { animation-delay: .36s; }
+@keyframes bounce-d { 0%,80%,100%{transform:scale(.45);opacity:.3} 40%{transform:scale(1);opacity:1} }
+
+/* Ingest section */
+.ilabel {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.itextarea {
+  width: 100%;
+  background: var(--white);
+  border: 1px solid var(--ink4);
+  border-radius: var(--rs);
+  padding: 8px 10px;
+  color: var(--ink);
+  font-size: 11.5px;
+  resize: none;
+  height: 80px;
+  outline: none;
+  transition: border-color .18s;
+  line-height: 1.55;
+}
+.itextarea:focus { border-color: var(--gold); }
+.itextarea::placeholder { color: var(--ink3); }
+
+/* Tag pills */
+.tag-row { display: flex; gap: 4px; flex-wrap: wrap; margin: 7px 0; }
+.mtag {
+  font-size: 9px; padding: 2px 8px; border-radius: 4px;
+  cursor: pointer; border: 1px solid; transition: all .15s;
+  font-weight: 600; letter-spacing: .3px;
+}
+.mt-tech      { color: var(--blue);   border-color: rgba(26,62,140,.3); }
+.mt-tech.sel, .mt-tech:hover   { background: var(--blue-d);   border-color: var(--blue); }
+.mt-trust     { color: var(--green);  border-color: rgba(26,107,58,.3); }
+.mt-trust.sel,.mt-trust:hover  { background: var(--green-d);  border-color: var(--green); }
+.mt-transform { color: var(--gold);   border-color: rgba(197,118,10,.3); }
+.mt-transform.sel,.mt-transform:hover { background: var(--gold-d); border-color: var(--gold); }
+.mt-insight   { color: var(--purple); border-color: rgba(107,42,140,.3); }
+.mt-insight.sel,.mt-insight:hover  { background: var(--purple-d); border-color: var(--purple); }
+
+/* Divider */
+.div-line { height: 1px; background: var(--border); margin: 11px 0; }
+
+/* Node list */
+.nodelist-hdr {
+  font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--ink3); margin-bottom: 6px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.search-wrap { position: relative; margin-bottom: 7px; }
+.search-inp {
+  width: 100%;
+  background: var(--white);
+  border: 1px solid var(--ink4);
+  border-radius: var(--rs);
+  padding: 6px 9px 6px 26px;
+  font-size: 11px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color .18s;
+}
+.search-inp:focus { border-color: var(--gold); }
+.search-inp::placeholder { color: var(--ink3); }
+.search-icon {
+  position: absolute;
+  left: 8px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: var(--ink3);
+  pointer-events: none;
+}
+.nitem {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 7px 8px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all .14s;
+  border: 1px solid transparent;
+  margin-bottom: 2px;
+}
+.nitem:hover { background: var(--white); border-color: var(--rule); box-shadow: var(--shadow); }
+.nitem.sel   { background: var(--white); border-color: var(--border); box-shadow: var(--shadow); }
+.ndot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.n-title { font-size: 11px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.n-sub   { font-size: 9px;  color: var(--ink3); margin-top: 1px; }
+.n-hausa { font-family: var(--arab); font-size: 10px; color: var(--gold); direction: rtl; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ══════════════════════════════════════════
+   CENTER — KNOWLEDGE GRAPH
+══════════════════════════════════════════ */
+.graph-c {
+  position: relative;
+  overflow: hidden;
+  background: var(--white);
+}
+
+/* Islamic geometric tile background */
+.graph-c::before {
+  content: '';
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cg fill='none' stroke='rgba(197%2C118%2C10%2C0.065)' stroke-width='0.8'%3E%3Cpolygon points='30%2C4 56%2C20 56%2C40 30%2C56 4%2C40 4%2C20'/%3E%3Cpolygon points='30%2C12 49%2C23 49%2C37 30%2C48 11%2C37 11%2C23'/%3E%3Cline x1='30' y1='4' x2='30' y2='12'/%3E%3Cline x1='56' y1='20' x2='49' y2='23'/%3E%3Cline x1='56' y1='40' x2='49' y2='37'/%3E%3Cline x1='30' y1='56' x2='30' y2='48'/%3E%3Cline x1='4' y1='40' x2='11' y2='37'/%3E%3Cline x1='4' y1='20' x2='11' y2='23'/%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 60px 60px;
+  opacity: 1;
+}
+
+#kz-graph { width: 100%; height: 100%; }
+
+/* Empty state */
+.g-empty {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 16px; pointer-events: none;
+}
+.g-empty-glyph {
+  font-family: var(--arab);
+  font-size: 64px;
+  color: var(--gold);
+  opacity: .15;
+  line-height: 1;
+}
+.g-empty-title {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink3);
+  text-align: center;
+}
+.g-empty-sub {
+  font-size: 12px;
+  color: var(--ink3);
+  text-align: center;
+  max-width: 220px;
+  line-height: 1.65;
+}
+.g-empty-btn {
+  padding: 9px 22px;
+  background: var(--gold);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  pointer-events: all;
+  transition: all .18s;
+  box-shadow: 0 3px 12px var(--gold-g);
+}
+.g-empty-btn:hover { background: var(--gold2); }
+
+/* Graph overlays */
+.g-legend {
+  position: absolute; top: 12px; left: 12px;
+  background: rgba(255,255,255,.94);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 9px 12px;
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow);
+}
+.leg-row {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; color: var(--ink3); margin-bottom: 3px;
+}
+.leg-row:last-child { margin-bottom: 0; }
+.leg-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+.g-pipeline {
+  position: absolute; top: 12px; right: 12px;
+  background: rgba(255,255,255,.94);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 9px 12px;
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow);
+  font-size: 10px;
+  color: var(--ink3);
+  max-width: 165px;
+}
+.gp-title { color: var(--gold); font-weight: 600; letter-spacing: .8px; margin-bottom: 5px; font-size: 9.5px; text-transform: uppercase; }
+.gp-row   { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
+.gp-dot   { width: 5px; height: 5px; border-radius: 50%; background: var(--ink3); flex-shrink: 0; }
+.gp-dot.done   { background: var(--green); box-shadow: 0 0 4px var(--green); }
+.gp-dot.active { background: var(--gold);  box-shadow: 0 0 5px var(--gold); animation: pulse 1s infinite; }
+
+.g-toolbar {
+  position: absolute;
+  bottom: 12px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 3px;
+  background: rgba(255,255,255,.96);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(8px);
+}
+.tb {
+  padding: 5px 11px;
+  border-radius: 5px;
+  background: transparent;
+  border: none;
+  color: var(--ink3);
+  font-family: var(--mono);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all .14s;
+}
+.tb:hover { background: var(--p1); color: var(--ink); }
+.tb.on    { background: var(--gold-d); color: var(--gold); }
+
+/* ══════════════════════════════════════════
+   RIGHT PANEL — NODE DETAIL
+══════════════════════════════════════════ */
+.rp {
+  background: var(--p1);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Empty state */
+.rp-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--ink3);
+  font-size: 11px;
+  text-align: center;
+  padding: 24px;
+}
+.rp-empty-glyph {
+  font-family: var(--arab);
+  font-size: 36px;
+  color: var(--gold);
+  opacity: .3;
+}
+
+/* Node card */
+.node-card {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  animation: cardIn .24s var(--ease);
+}
+.node-card.vis { display: flex; }
+@keyframes cardIn { from{opacity:0;transform:translateX(8px)} to{opacity:1;transform:translateX(0)} }
+
+/* Card header */
+.nc-hdr {
+  padding: 13px 13px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--white);
+  position: relative;
+}
+.nc-hdr::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--gold2), transparent 70%);
+}
+.nc-title-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+.nc-glyph {
+  width: 34px; height: 34px; border-radius: 7px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; border: 1px solid var(--ink4);
+}
+.nc-title {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.2;
+  flex: 1;
+  outline: none;
+}
+.nc-title[contenteditable=true]:focus { border-bottom: 1px dashed var(--gold); }
+.nc-hausa {
+  font-family: var(--arab);
+  font-size: 13px;
+  color: var(--gold);
+  direction: rtl;
+  margin: 3px 0 5px;
+  opacity: .9;
+  padding-left: 42px;
+}
+.nc-meta { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.cat-badge {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.2px;
+  text-transform: uppercase; padding: 2px 7px; border-radius: 3px; border: 1px solid;
+}
+.cb-tech     { color: var(--blue);   border-color: rgba(26,62,140,.3);   background: var(--blue-d);   }
+.cb-trust    { color: var(--green);  border-color: rgba(26,107,58,.3);   background: var(--green-d);  }
+.cb-transform{ color: var(--gold);   border-color: rgba(197,118,10,.3);  background: var(--gold-d);   }
+.cb-insight  { color: var(--purple); border-color: rgba(107,42,140,.3);  background: var(--purple-d); }
+.nc-meta-txt { font-size: 9px; color: var(--ink3); }
+
+/* Card body — scrollable fields */
+.nc-body { flex: 1; overflow-y: auto; background: var(--white); }
+
+.field {
+  padding: 10px 13px;
+  border-bottom: 1px solid var(--rule);
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 8px;
+  align-items: flex-start;
+}
+.field:last-child { border-bottom: none; }
+.fl {
+  font-size: 9px; font-weight: 600; letter-spacing: 1.3px;
+  text-transform: uppercase; color: var(--ink3);
+  display: flex; align-items: center; gap: 4px; padding-top: 2px; flex-shrink: 0;
+}
+.fi { font-size: 11px; }
+.fv { flex: 1; min-width: 0; }
+.f-ta {
+  width: 100%; background: transparent; border: none; outline: none;
+  font-family: var(--mono); font-size: 11.5px; color: var(--ink2);
+  line-height: 1.65; resize: none; padding: 0;
+}
+.f-ta:not([readonly]):focus {
+  color: var(--ink); background: var(--p1);
+  border-radius: var(--rs); padding: 5px 7px; margin: -5px -7px;
+  border: 1px solid var(--gold); width: calc(100% + 14px);
+}
+
+/* Hausa field */
+.hausa-ta {
+  width: 100%; background: var(--p1); border: 1px solid var(--ink4);
+  border-radius: var(--rs); padding: 7px 9px; color: var(--gold);
+  font-family: var(--arab); font-size: 13px; direction: rtl; outline: none;
+  resize: none; transition: border-color .15s; line-height: 1.55;
+}
+.hausa-ta:focus { border-color: var(--gold); }
+.hausa-ta::placeholder { color: var(--ink3); font-family: var(--arab); direction: rtl; }
+.hausa-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.ha-btn {
+  padding: 4px 9px; border-radius: var(--rs); font-size: 10px; font-weight: 600;
+  cursor: pointer; border: 1px solid var(--border); background: var(--gold-d);
+  color: var(--gold); transition: all .14s;
+}
+.ha-btn:hover { border-color: var(--gold); background: rgba(197,118,10,.18); }
+.ha-status { font-size: 10px; color: var(--ink3); }
+
+/* Topic selector */
+.topic-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 100px; font-size: 10px;
+  font-weight: 600; border: 1px solid; cursor: pointer;
+}
+.topic-sel {
+  background: transparent; border: none; outline: none;
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  cursor: pointer; padding: 0;
+}
+.topic-sel option { background: #fff; color: var(--ink); }
+
+/* Related nodes */
+.rel-list { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.rnode {
+  display: flex; align-items: center; gap: 4px; padding: 2px 7px;
+  border-radius: 5px; font-size: 10px; background: var(--p1);
+  border: 1px solid var(--ink4); color: var(--ink2); cursor: pointer;
+  transition: all .14s;
+}
+.rnode:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-d); }
+.rdot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.add-rel {
+  padding: 2px 7px; border-radius: 5px; font-size: 10px; color: var(--ink3);
+  border: 1px dashed var(--ink4); cursor: pointer; background: transparent;
+  transition: all .14s;
+}
+.add-rel:hover { border-color: var(--green); color: var(--green); }
+.rel-picker { position: relative; display: inline-block; }
+.rel-menu {
+  display: none; position: absolute; top: calc(100% + 4px); left: 0;
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--rs);
+  z-index: 60; min-width: 210px; max-height: 180px; overflow-y: auto;
+  box-shadow: var(--shadow-md); padding: 4px;
+}
+.rel-menu.open { display: block; animation: menuIn .12s var(--ease); }
+@keyframes menuIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+.rpick {
+  display: flex; align-items: center; gap: 7px; padding: 6px 10px;
+  border-radius: 5px; font-size: 11px; color: var(--ink2); cursor: pointer;
+  transition: background .1s;
+}
+.rpick:hover { background: var(--p1); color: var(--ink); }
+
+/* Leverage */
+.lev-wrap { display: flex; align-items: center; gap: 10px; }
+.lev-num { font-family: var(--serif); font-weight: 700; font-size: 21px; color: var(--gold); min-width: 22px; }
+.lev-track { flex: 1; height: 5px; background: var(--p2); border-radius: 3px; overflow: hidden; max-width: 100px; }
+.lev-fill { height: 100%; border-radius: 3px; transition: width .4s var(--ease); }
+.lev-lbl { font-size: 9px; color: var(--ink3); letter-spacing: .4px; }
+.sc-btns { display: flex; gap: 2px; }
+.sc-btn {
+  width: 20px; height: 20px; border-radius: 4px;
+  background: var(--p1); border: 1px solid var(--ink4);
+  color: var(--ink3); font-size: 11px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all .14s;
+}
+.sc-btn:hover { background: var(--gold-d); color: var(--gold); border-color: var(--border); }
+
+/* Status */
+.status-wrap { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.s-badge {
+  display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px;
+  border-radius: 100px; font-size: 10px; font-weight: 600; border: 1px solid;
+  cursor: pointer; transition: all .18s; position: relative; overflow: hidden;
+}
+.s-badge::before { content: ''; position: absolute; inset: 0; background: currentColor; opacity: .07; }
+.s-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.s-dot.pulse { animation: pulse 2s infinite; box-shadow: 0 0 5px currentColor; }
+.s-menu {
+  position: absolute; top: calc(100% + 4px); left: 0;
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--rs);
+  padding: 4px; z-index: 60; min-width: 170px;
+  box-shadow: var(--shadow-md); display: none; flex-direction: column; gap: 1px;
+}
+.s-menu.open { display: flex; animation: menuIn .12s var(--ease); }
+.sopt {
+  display: flex; align-items: center; gap: 7px; padding: 6px 9px;
+  border-radius: 5px; font-size: 10px; cursor: pointer; transition: background .1s; color: var(--ink2);
+}
+.sopt:hover { background: var(--p1); }
+.sopt-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.sopt-d { font-size: 8.5px; color: var(--ink3); margin-left: auto; }
+.steps { display: flex; align-items: center; }
+.stp { display: flex; align-items: center; }
+.stp-dot { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--ink3); transition: all .24s; }
+.stp-dot.done   { background: var(--green); border-color: var(--green); box-shadow: 0 0 5px var(--green); }
+.stp-dot.active { background: var(--gold);  border-color: var(--gold);  box-shadow: 0 0 6px var(--gold); animation: pulse 2s infinite; }
+.stp-line { width: 14px; height: 1.5px; background: var(--ink4); }
+.stp-line.done { background: var(--green); }
+
+/* Actions */
+.actions-wrap { display: flex; gap: 4px; flex-wrap: wrap; }
+.ab {
+  display: flex; align-items: center; gap: 4px; padding: 6px 9px;
+  border-radius: var(--rs); font-family: var(--mono); font-size: 10px; font-weight: 500;
+  cursor: pointer; transition: all .14s var(--ease); border: 1px solid;
+  position: relative; overflow: hidden; letter-spacing: .2px;
+}
+.ab:hover { transform: translateY(-1px); box-shadow: 0 3px 12px rgba(30,21,9,.10); }
+.ab::before { content: ''; position: absolute; inset: 0; background: currentColor; opacity: 0; transition: opacity .14s; }
+.ab:hover::before { opacity: .06; }
+.ab-i,.ab-t { position: relative; z-index: 1; }
+.ab-k { font-size: 8px; opacity: .4; position: relative; z-index: 1; margin-left: 2px; }
+.ab-r { color: var(--blue);   border-color: rgba(26,62,140,.3);   background: var(--blue-d);   }
+.ab-r:hover { border-color: var(--blue); }
+.ab-l { color: var(--purple); border-color: rgba(107,42,140,.3);  background: var(--purple-d); }
+.ab-l:hover { border-color: var(--purple); }
+.ab-a { color: var(--green);  border-color: rgba(26,107,58,.3);   background: var(--green-d);  }
+.ab-a:hover { border-color: var(--green); }
+.ab-c { color: var(--gold);   border-color: rgba(197,118,10,.3);  background: var(--gold-d);   }
+.ab-c:hover { border-color: var(--gold); }
+.ab-t2{ color: var(--red);    border-color: rgba(140,26,26,.3);   background: var(--red-d);    }
+.ab-t2:hover { border-color: var(--red); }
+
+/* AI Output inside card */
+.ai-wrap {
+  flex-shrink: 0; max-height: 195px; overflow-y: auto;
+  border-top: 1px solid var(--green-d);
+  background: rgba(26,107,58,.03);
+  display: none;
+}
+.ai-wrap.open { display: block; animation: slideDown .2s var(--ease); }
+.ai-hdr {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(26,107,58,.10);
+  display: flex; align-items: center; gap: 7px;
+  font-size: 10px; font-weight: 600; color: var(--green); letter-spacing: .8px;
+}
+.ai-close {
+  margin-left: auto; cursor: pointer; width: 18px; height: 18px;
+  border-radius: 4px; display: flex; align-items: center; justify-content: center;
+  background: var(--white); border: 1px solid var(--rule); color: var(--ink3); font-size: 12px;
+  transition: color .14s;
+}
+.ai-close:hover { color: var(--ink); }
+.ai-loading { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--ink3); padding: 11px 12px; }
+.ai-out { font-size: 11px; color: var(--ink2); line-height: 1.72; white-space: pre-wrap; font-family: var(--mono); padding: 11px 12px; display: none; }
+
+/* Card footer */
+.nc-foot {
+  padding: 8px 13px; background: var(--white); border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0;
+}
+.nc-fmeta { font-size: 9px; color: var(--ink3); display: flex; align-items: center; gap: 3px; }
+.nc-fmeta span { color: var(--ink2); }
+.nc-fbtns { margin-left: auto; display: flex; gap: 3px; }
+.ncfb {
+  padding: 4px 7px; border-radius: 4px; font-family: var(--mono); font-size: 9px;
+  cursor: pointer; transition: all .14s; background: var(--p1);
+  border: 1px solid var(--ink4); color: var(--ink3);
+}
+.ncfb:hover { background: var(--p2); color: var(--ink); }
+.ncfb.wa  { color: var(--green); border-color: rgba(26,107,58,.25); }
+.ncfb.wa:hover { background: var(--green-d); }
+.ncfb.del { color: var(--red);   border-color: rgba(140,26,26,.2);  }
+.ncfb.del:hover { background: var(--red-d); }
+
+/* ══════════════════════════════════════════
+   HUB FOOTER
+══════════════════════════════════════════ */
+.hub {
+  height: var(--hub-h);
+  min-height: var(--hub-h);
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 12px; gap: 4px;
+  overflow-x: auto; z-index: 10; position: relative;
+  box-shadow: 0 -1px 4px rgba(30,21,9,.04);
+}
+.hub-lbl { font-size: 9px; color: var(--ink3); flex-shrink: 0; margin-right: 3px; letter-spacing: 1px; text-transform: uppercase; }
+.hbtn {
+  display: flex; align-items: center; gap: 3px; padding: 4px 9px;
+  border-radius: 5px; border: 1px solid var(--ink4); background: transparent;
+  color: var(--ink3); font-family: var(--mono); font-size: 10px;
+  cursor: pointer; transition: all .14s; white-space: nowrap;
+}
+.hbtn:hover { background: var(--p1); color: var(--ink); border-color: var(--border); }
+.hbtn.on   { background: var(--gold-d); color: var(--gold); border-color: var(--border); }
+.hdiv { width: 1px; height: 17px; background: var(--border); flex-shrink: 0; }
+.hub-r { margin-left: auto; font-size: 9px; color: var(--ink3); display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.fdb { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+
+/* ══════════════════════════════════════════
+   MODALS
+══════════════════════════════════════════ */
+.modal-bg {
+  position: fixed; inset: 0; z-index: 400;
+  background: rgba(30,21,9,.55); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.modal-bg.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 12px; width: 100%; max-width: 470px;
+  max-height: 86vh; overflow-y: auto; padding: 24px;
+  transform: translateY(10px) scale(.98); transition: transform .2s var(--ease);
+  box-shadow: var(--shadow-md);
+}
+.modal-bg.open .modal { transform: translateY(0) scale(1); }
+.modal-title { font-family: var(--serif); font-weight: 700; font-size: 16px; margin-bottom: 16px; }
+.fg { margin-bottom: 13px; }
+.flbl { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink3); font-weight: 600; margin-bottom: 4px; display: block; }
+.finput, .ftextarea, .fselect {
+  width: 100%; background: var(--p1); border: 1px solid var(--ink4);
+  border-radius: var(--rs); padding: 9px 11px; color: var(--ink);
+  font-family: var(--mono); font-size: 12px; outline: none; transition: border-color .14s;
+}
+.finput:focus, .ftextarea:focus, .fselect:focus { border-color: var(--gold); }
+.ftextarea { resize: vertical; min-height: 68px; line-height: 1.6; }
+.modal-btns { display: flex; gap: 6px; margin-top: 16px; }
+.mbtn {
+  display: flex; align-items: center; gap: 5px; padding: 8px 14px;
+  border-radius: var(--rs); font-family: var(--mono); font-size: 11px;
+  font-weight: 600; cursor: pointer; transition: all .14s; border: none;
+}
+.mb-gold  { background: var(--gold);  color: #fff; }
+.mb-gold:hover  { background: var(--gold2); }
+.mb-ghost { background: var(--p2);    color: var(--ink2); border: 1px solid var(--ink4); }
+.mb-ghost:hover { background: var(--p3); }
+
+/* Settings mode cards */
+.mode-card {
+  padding: 12px; border-radius: var(--rs); border: 1px solid var(--ink4);
+  background: var(--p1); cursor: pointer; text-align: center; transition: all .14s;
+}
+.mode-card:hover, .mode-card.on { border-color: var(--gold); background: var(--gold-d); }
+.cs { padding: 10px 12px; border-radius: var(--rs); font-size: 10.5px; line-height: 1.6; margin: 8px 0; border: 1px solid; }
+.cs.tip  { background: var(--blue-d);  border-color: rgba(26,62,140,.25);  color: var(--ink2); }
+.cs.note { background: var(--gold-d);  border-color: var(--border);        color: var(--ink2); }
+
+/* Export overlay */
+.exp-bg {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(30,21,9,.7); backdrop-filter: blur(12px);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 28px 20px; overflow-y: auto;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.exp-bg.open { opacity: 1; pointer-events: all; }
+.exp-toolbar {
+  width: 100%; max-width: 560px; display: flex;
+  justify-content: space-between; align-items: center; margin-bottom: 14px;
+}
+.exp-card {
+  width: 100%; max-width: 560px; background: var(--white);
+  border: 1px solid var(--border); border-radius: 12px;
+  overflow: hidden; box-shadow: var(--shadow-md);
+}
+.ec-top { padding: 22px 24px 16px; border-bottom: 1px solid var(--border); position: relative; }
+.ec-top::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--gold), var(--gold2), transparent 70%); }
+.ec-kz-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.ec-kz { width: 26px; height: 26px; background: var(--gold); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-weight: 700; font-size: 11px; color: #fff; }
+.ec-title { font-family: var(--serif); font-weight: 700; font-size: 20px; color: var(--ink); line-height: 1.2; margin-bottom: 4px; }
+.ec-hausa { font-family: var(--arab); font-size: 15px; color: var(--gold); direction: rtl; margin-bottom: 12px; opacity: .9; }
+.ec-body { padding: 18px 24px; }
+.ec-sec { font-size: 9.5px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--ink3); font-weight: 600; margin-bottom: 7px; }
+.ec-sum { font-size: 13px; color: var(--ink2); line-height: 1.75; margin-bottom: 16px; }
+.ec-stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+.ec-stat { background: var(--p1); border: 1px solid var(--border); border-radius: var(--rs); padding: 11px; text-align: center; }
+.ec-stat-v { font-family: var(--serif); font-weight: 700; font-size: 20px; color: var(--gold); }
+.ec-stat-k { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--ink3); margin-top: 2px; }
+.ec-foot { padding: 12px 24px; background: var(--p1); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 10px; color: var(--ink3); }
+.ec-wm { font-family: var(--arab); font-size: 15px; color: var(--gold); opacity: .6; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 50px; left: 50%;
+  transform: translateX(-50%) translateY(50px);
+  background: var(--white); border: 1px solid var(--border); border-radius: 7px;
+  padding: 9px 16px; font-size: 11px; color: var(--ink); z-index: 600;
+  transition: transform .2s var(--ease); display: flex; align-items: center; gap: 7px;
+  box-shadow: var(--shadow-md); white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Spinner */
+.spin {
+  display: inline-block; width: 11px; height: 11px;
+  border: 1.5px solid rgba(30,21,9,.15);
+  border-top-color: currentColor; border-radius: 50%;
+  animation: sp .7s linear infinite;
+}
+@keyframes sp { to{transform:rotate(360deg)} }
+
+/* Responsive */
+@media (max-width: 860px) {
+  :root { --lp-w: 230px; --rp-w: 250px; }
+  .steps { display: none; }
+}
+@media (max-width: 600px) {
+  .workspace { grid-template-columns: 1fr; }
+  .lp, .rp { display: none; }
+  .pipe { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ NAV ═══════════════ -->
+<nav class="nav">
+  <div class="kz-mark">
+    <div class="kz-seal">KZ</div>
+    <div class="kz-brand-text">
+      <div class="kz-name">Kimiyyar Zahiri Tech Hub</div>
+      <div class="kz-sub">کیمیار ظاہری · Knowledge Graph OS</div>
+    </div>
+  </div>
+
+  <div class="pipe">
+    <span class="pipe-step done"   id="ps-ingest">① Ingest</span><span class="pipe-arr">→</span>
+    <span class="pipe-step"        id="ps-embed" >② Embed</span><span class="pipe-arr">→</span>
+    <span class="pipe-step"        id="ps-graph" >③ Graph</span><span class="pipe-arr">→</span>
+    <span class="pipe-step"        id="ps-explore">④ Explore</span><span class="pipe-arr">→</span>
+    <span class="pipe-step"        id="ps-act"   >⑤ Act</span><span class="pipe-arr">→</span>
+    <span class="pipe-step"        id="ps-learn" >⑥ Learn</span>
+  </div>
+
+  <div class="nav-r">
+    <div class="live"></div>
+    <div class="n-stat">Nodes: <b id="sN">0</b></div>
+    <div class="n-stat">Edges: <b id="sE">0</b></div>
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btnEn" onclick="setLang('en')">EN</button>
+      <button class="lang-btn"        id="btnHa" onclick="setLang('ha')">HA</button>
+    </div>
+    <button class="n-btn gold" onclick="openNewModal()">+ Node</button>
+    <button class="n-btn" id="settingsBtn" onclick="openSettings()">⚙</button>
+  </div>
+</nav>
+
+<!-- ═══════════════ WORKSPACE ═══════════════ -->
+<div class="workspace">
+
+  <!-- LEFT PANEL -->
+  <div class="lp">
+    <div class="panel-head"><span class="panel-head-accent">◈</span> Nodes &amp; Research</div>
+    <div class="panel-body">
+
+      <!-- Research Query Box -->
+      <div class="research-box">
+        <div class="rb-label">🔍 Research Query</div>
+        <textarea class="rb-input" id="queryInput" placeholder="Ask a research question about AI, Web3, Islamic finance, Arewa economy... (Hausa or English)"></textarea>
+        <button class="rb-btn" id="researchBtn" onclick="research()">
+          <span id="rbTxt">⚡ Research</span>
+        </button>
+      </div>
+
+      <!-- Research Output -->
+      <div class="r-out-wrap" id="rOutWrap">
+        <div class="r-out-hdr">
+          <span>● RESEARCH OUTPUT</span>
+          <div class="r-out-close" onclick="closeROut()">×</div>
+        </div>
+        <div class="r-out-loading" id="rLoading">
+          <span>Researching</span>
+          <span class="dots"><span></span><span></span><span></span></span>
+        </div>
+        <div class="r-out-body" id="rOutput" style="display:none"></div>
+      </div>
+
+      <!-- Ingest -->
+      <div class="ilabel">📄 Paste Text → Graph</div>
+      <textarea class="itextarea" id="ingestInput" placeholder="Paste any text — article, idea, chat. AI extracts concepts and builds graph nodes..."></textarea>
+      <div class="ilabel" style="margin-top:8px">🏷 Force Category</div>
+      <div class="tag-row">
+        <span class="mtag mt-tech"      onclick="toggleTag(this,'tech')">🔬 Tech</span>
+        <span class="mtag mt-trust"     onclick="toggleTag(this,'trust')">🛡 Trust</span>
+        <span class="mtag mt-transform" onclick="toggleTag(this,'transform')">🚀 Transform</span>
+        <span class="mtag mt-insight"   onclick="toggleTag(this,'insight')">💡 Insight</span>
+      </div>
+      <button class="rb-btn" id="ingestBtn" onclick="processIngest()" style="margin-top:7px">
+        <span id="ingestTxt">⚡ Process → Graph</span>
+      </button>
+
+      <div class="div-line"></div>
+
+      <!-- Node List -->
+      <div class="nodelist-hdr">
+        <span>Knowledge Nodes</span>
+        <span id="nCount" style="color:var(--gold)">0</span>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-inp" id="searchInp" placeholder="Search nodes..." oninput="renderNodeList()">
+      </div>
+      <div id="nodeList"></div>
+
+    </div>
+  </div>
+
+  <!-- CENTER GRAPH -->
+  <div class="graph-c">
+    <div id="kz-graph"></div>
+
+    <div class="g-empty" id="gEmpty">
+      <div class="g-empty-glyph">◈</div>
+      <div class="g-empty-title">Knowledge Graph</div>
+      <div class="g-empty-sub" id="emptySubTxt">Your knowledge network will appear here. Load seed data or paste text to begin.</div>
+      <button class="g-empty-btn" onclick="loadSeed()">🌱 Load Seed Data</button>
+    </div>
+
+    <div class="g-legend">
+      <div class="leg-row"><div class="leg-dot" style="background:var(--blue)"></div><span id="l1">Technology</span></div>
+      <div class="leg-row"><div class="leg-dot" style="background:var(--green)"></div><span id="l2">Trust</span></div>
+      <div class="leg-row"><div class="leg-dot" style="background:var(--gold)"></div><span id="l3">Transform</span></div>
+      <div class="leg-row"><div class="leg-dot" style="background:var(--purple)"></div><span id="l4">Insight</span></div>
+    </div>
+
+    <div class="g-pipeline">
+      <div class="gp-title">Pipeline</div>
+      <div class="gp-row"><div class="gp-dot done" id="pi1"></div><span id="pi1t">Ingest ready</span></div>
+      <div class="gp-row"><div class="gp-dot" id="pi2"></div><span id="pi2t">Embedding</span></div>
+      <div class="gp-row"><div class="gp-dot" id="pi3"></div><span id="pi3t">Building graph</span></div>
+      <div class="gp-row"><div class="gp-dot" id="pi4"></div><span id="pi4t">Linking edges</span></div>
+      <div class="gp-row"><div class="gp-dot" id="pi5"></div><span id="pi5t">AI layer ready</span></div>
+    </div>
+
+    <div class="g-toolbar">
+      <button class="tb" onclick="fitGraph()">⊡ Fit</button>
+      <button class="tb on" id="tbPhysics" onclick="togglePhysics()">⬤ Physics</button>
+      <button class="tb" onclick="clearGraph()">🗑 Clear</button>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="rp">
+    <div class="panel-head"><span class="panel-head-accent">◎</span> Node Detail</div>
+
+    <div class="rp-empty" id="rpEmpty">
+      <div class="rp-empty-glyph">◎</div>
+      <span>Click any node on the graph to open its full detail card</span>
+    </div>
+
+    <div class="node-card" id="nodeCard">
+
+      <!-- Header -->
+      <div class="nc-hdr">
+        <div class="nc-title-row">
+          <div class="nc-glyph" id="ncGlyph">💡</div>
+          <div class="nc-title" id="ncTitle" contenteditable="false" spellcheck="false">Node Title</div>
+          <button class="ncfb" id="editBtn" onclick="toggleTitleEdit()" style="flex-shrink:0">✎</button>
+        </div>
+        <div class="nc-hausa" id="ncHausa" style="display:none"></div>
+        <div class="nc-meta" id="ncMeta"></div>
+      </div>
+
+      <!-- Body -->
+      <div class="nc-body">
+
+        <div class="field">
+          <div class="fl"><span class="fi">💡</span>Summary</div>
+          <div class="fv">
+            <textarea class="f-ta" id="fSum" readonly rows="3" placeholder="Core idea..."></textarea>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="fl"><span class="fi">🌙</span><span id="fl-hausa">Hausa</span></div>
+          <div class="fv">
+            <textarea class="hausa-ta" id="fHTitle" rows="1" placeholder="Taken Hausa..." oninput="autoSaveHausa()"></textarea>
+            <textarea class="hausa-ta" id="fHSum" rows="2" style="margin-top:5px" placeholder="Taƙaitaccen bayani..." oninput="autoSaveHausa()"></textarea>
+            <div class="hausa-actions">
+              <button class="ha-btn" id="xlBtn" onclick="translateHausa()">✦ AI Fassara</button>
+              <span class="ha-status" id="xlStatus"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="fl"><span class="fi">◉</span>Topic</div>
+          <div class="fv"><div id="fTopicWrap"></div></div>
+        </div>
+
+        <div class="field">
+          <div class="fl"><span class="fi">⬡</span>Related</div>
+          <div class="fv"><div class="rel-list" id="fRelated"></div></div>
+        </div>
+
+        <div class="field">
+          <div class="fl"><span class="fi">⚡</span>Leverage</div>
+          <div class="fv">
+            <div class="lev-wrap">
+              <div class="lev-num" id="fLevN">3</div>
+              <div>
+                <div class="lev-track"><div class="lev-fill" id="fLevF" style="width:60%"></div></div>
+                <div class="lev-lbl" id="fLevL">MODERATE</div>
+              </div>
+              <div class="sc-btns">
+                <button class="sc-btn" onclick="adjScore(-1)">−</button>
+                <button class="sc-btn" onclick="adjScore(+1)">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="fl"><span class="fi">◈</span>Status</div>
+          <div class="fv">
+            <div class="status-wrap">
+              <div style="position:relative" id="sRing">
+                <div class="s-badge" id="sBadge" onclick="toggleStatusMenu()">
+                  <div class="s-dot pulse" id="sDot"></div>
+                  <span id="sTxt">Concept</span>
+                  <span style="font-size:8px;opacity:.4;margin-left:3px">▾</span>
+                </div>
+                <div class="s-menu" id="sMenu"></div>
+              </div>
+              <div class="steps" id="fSteps"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field" style="border-bottom:none">
+          <div class="fl"><span class="fi">▶</span>Actions</div>
+          <div class="fv">
+            <div class="actions-wrap">
+              <button class="ab ab-r" onclick="runAction('research')"><span class="ab-i">🔍</span><span class="ab-t">Research</span><span class="ab-k">R</span></button>
+              <button class="ab ab-l" onclick="runAction('learn')"><span class="ab-i">📚</span><span class="ab-t">Learn</span><span class="ab-k">L</span></button>
+              <button class="ab ab-a" onclick="runAction('automate')"><span class="ab-i">⚙</span><span class="ab-t">Auto</span><span class="ab-k">A</span></button>
+              <button class="ab ab-c" onclick="runAction('content')"><span class="ab-i">✍</span><span class="ab-t">Content</span><span class="ab-k">C</span></button>
+              <button class="ab ab-t2" onclick="runAction('track')"><span class="ab-i">📊</span><span class="ab-t">Track</span><span class="ab-k">T</span></button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /nc-body -->
+
+      <div class="nc-foot">
+        <div class="nc-fmeta">🕐 <span id="fCreated">—</span></div>
+        <div class="nc-fmeta">🔄 <span id="fUpdated">—</span></div>
+        <div class="nc-fbtns">
+          <button class="ncfb wa" onclick="shareWA()">📲 WA</button>
+          <button class="ncfb" onclick="openExport()">↗</button>
+          <button class="ncfb" onclick="dupNode()">⧉</button>
+          <button class="ncfb del" onclick="delNode()">🗑</button>
+        </div>
+      </div>
+
+      <!-- AI Output -->
+      <div class="ai-wrap" id="aiWrap">
+        <div class="ai-hdr">
+          <span id="aiLbl">● OUTPUT</span>
+          <div class="ai-close" onclick="closeAI()">×</div>
+        </div>
+        <div class="ai-loading" id="aiLoad"><span>Generating</span><span class="dots"><span></span><span></span><span></span></span></div>
+        <div class="ai-out" id="aiOut"></div>
+      </div>
+
+    </div><!-- /node-card -->
+  </div><!-- /rp -->
+
+</div><!-- /workspace -->
+
+<!-- HUB FOOTER -->
+<div class="hub">
+  <span class="hub-lbl">Hub:</span>
+  <button class="hbtn on" onclick="setHub(this,'all')">All</button>
+  <button class="hbtn" onclick="setHub(this,'research')">🔍 Research</button>
+  <button class="hbtn" onclick="setHub(this,'learn')">📚 Learn</button>
+  <button class="hbtn" onclick="setHub(this,'automate')">⚙ Auto</button>
+  <button class="hbtn" onclick="setHub(this,'content')">✍ Content</button>
+  <button class="hbtn" onclick="setHub(this,'track')">📊 Track</button>
+  <div class="hdiv"></div>
+  <button class="hbtn" onclick="exportJSON()">↗ Export</button>
+  <button class="hbtn" onclick="loadSeed()">🌱 Seed</button>
+  <div class="hub-r"><div class="fdb"></div><span id="fbMsg">Graph OS ready</span></div>
+</div>
+
+<!-- NEW NODE MODAL -->
+<div class="modal-bg" id="newModal" onclick="closeMBg(event,'newModal')">
+  <div class="modal">
+    <div class="modal-title">✦ New Knowledge Node</div>
+    <div class="fg"><label class="flbl">Title *</label><input class="finput" id="mTitle" placeholder="e.g. Paystack API for Arewa Merchants"></div>
+    <div class="fg"><label class="flbl">Summary</label><textarea class="ftextarea" id="mSum" placeholder="Describe the core idea..."></textarea></div>
+    <div class="fg"><label class="flbl">Category</label>
+      <select class="finput fselect" id="mCat">
+        <option value="tech">🔬 Technology</option>
+        <option value="trust">🛡 Trust</option>
+        <option value="transform">🚀 Transform</option>
+        <option value="insight">💡 Insight</option>
+      </select>
+    </div>
+    <div class="fg"><label class="flbl">Leverage (1–5)</label><input class="finput" id="mLev" type="number" min="1" max="5" value="3"></div>
+    <div class="modal-btns">
+      <button class="mbtn mb-gold" onclick="createNode()">✦ Create Node</button>
+      <button class="mbtn mb-ghost" onclick="closeModal('newModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-bg" id="settingsModal" onclick="closeMBg(event,'settingsModal')">
+  <div class="modal" style="max-width:430px">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px">
+      <span style="font-size:18px">⚙</span>
+      <div class="modal-title" style="margin-bottom:0">API Settings</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px">
+      <div id="mPersonal" class="mode-card on" onclick="setApiMode('personal')">
+        <div style="font-size:16px;margin-bottom:3px">🔑</div>
+        <div style="font-weight:700;font-size:11px">Personal</div>
+        <div style="font-size:9px;color:var(--ink3);margin-top:2px">Your own API key</div>
+      </div>
+      <div id="mCommunity" class="mode-card" onclick="setApiMode('community')">
+        <div style="font-size:16px;margin-bottom:3px">🌐</div>
+        <div style="font-weight:700;font-size:11px">Community</div>
+        <div style="font-size:9px;color:var(--ink3);margin-top:2px">Shared proxy server</div>
+      </div>
+    </div>
+    <div id="sPersonal">
+      <div class="fg"><label class="flbl">Anthropic API Key</label><input class="finput" id="sKey" type="password" placeholder="sk-ant-api03-..." autocomplete="off"></div>
+      <div class="cs tip">🔒 Stored only in your browser. Never sent anywhere except Anthropic.</div>
+    </div>
+    <div id="sCommunity" style="display:none">
+      <div class="fg"><label class="flbl">Worker / Proxy URL</label><input class="finput" id="sProxy" type="url" placeholder="https://kz-ai-gateway.yourname.workers.dev"></div>
+      <div class="cs note">🌐 All AI requests route through this Cloudflare Worker. No key needed in browser.</div>
+    </div>
+    <div id="sStatus" style="display:none;margin:8px 0;padding:9px 12px;border-radius:var(--rs);font-size:11px"></div>
+    <div class="modal-btns">
+      <button class="mbtn mb-gold" onclick="saveSettings()">✓ Save</button>
+      <button class="mbtn mb-ghost" onclick="testConn()"><span id="testTxt">↗ Test</span></button>
+      <button class="mbtn mb-ghost" onclick="closeModal('settingsModal')">Cancel</button>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--rule)">
+      <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink3);font-weight:600;margin-bottom:6px">Connection</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink3)">
+        <div id="cDot" style="width:7px;height:7px;border-radius:50%;background:var(--ink3);flex-shrink:0"></div>
+        <span id="cMsg">Not configured — click ⚙ to set up</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT OVERLAY -->
+<div class="exp-bg" id="expBg">
+  <div class="exp-toolbar">
+    <div style="font-family:var(--serif);font-weight:700;font-size:14px;color:#fff">↗ Shareable Node Card</div>
+    <div style="display:flex;gap:7px">
+      <button class="mbtn mb-ghost" onclick="window.print()">🖨 Print</button>
+      <button class="mbtn mb-ghost" onclick="closeExp()">× Close</button>
+    </div>
+  </div>
+  <div class="exp-card" id="expCard"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════ JAVASCRIPT ═══════════════ -->
+<script>
+'use strict';
+
+/* ══════════════════════════════════════
+   CONSTANTS
+══════════════════════════════════════ */
+const WORKER_URL = 'YOUR_WORKER_URL_HERE'; // Replace with your Cloudflare Worker URL
+
+const TOPICS = {
+  tech:      { label:'Technology', hausa:'Fasaha',      icon:'🔬', color:'#1A3E8C', cls:'cb-tech'     },
+  trust:     { label:'Trust',      hausa:'Amana',       icon:'🛡',  color:'#1A6B3A', cls:'cb-trust'    },
+  transform: { label:'Transform',  hausa:'Canji',       icon:'🚀',  color:'#C5760A', cls:'cb-transform' },
+  insight:   { label:'Insight',    hausa:'Basira',      icon:'💡',  color:'#6B2A8C', cls:'cb-insight'  },
+};
+const CAT_COLOR = { tech:'#1A3E8C', trust:'#1A6B3A', transform:'#C5760A', insight:'#6B2A8C' };
+
+const LEV_LBL = { 1:'LOW', 2:'LOW-MED', 3:'MODERATE', 4:'HIGH IMPACT', 5:'MAXIMUM' };
+const LEV_CLR = { 1:'var(--red)', 2:'var(--gold)', 3:'var(--gold2)', 4:'var(--green)', 5:'var(--green)' };
+
+const STATUSES = [
+  { id:'concept',   label:'Concept',   hausa:'Ra\'ayi',   color:'#1A3E8C', desc:'Early idea'     },
+  { id:'research',  label:'Research',  hausa:'Bincike',   color:'#6B2A8C', desc:'Being explored' },
+  { id:'prototype', label:'Prototype', hausa:'Gwaji',     color:'#C5760A', desc:'Being built'    },
+  { id:'launch',    label:'Launch',    hausa:'Fara',      color:'#1A6B3A', desc:'Ready to ship'  },
+  { id:'growth',    label:'Growth',    hausa:'Ci gaba',   color:'#0A7070', desc:'Scaling'        },
+];
+
+const ACT_CLR = { research:'#1A3E8C', learn:'#6B2A8C', automate:'#1A6B3A', content:'#C5760A', track:'#8C1A1A' };
+const ACT_LBL = { research:'RESEARCH', learn:'LEARN MODULE', automate:'AUTOMATION', content:'CONTENT', track:'TRACKING' };
+
+const ACT_PROMPTS = {
+  research: n=>`You are the KZ Hub AI for Kimiyyar Zahiri — a digital education movement for Northern Nigeria (Arewa).\n\nNode: "${n.title}"\nSummary: "${n.summary}"\nCategory: ${n.topic}\n\nProvide:\n1. Current state in Northern Nigeria / Arewa context\n2. Three specific opportunities or gaps\n3. Key players or examples relevant to Nigeria\n4. MATAKI (Next Step): One concrete action\n\nBe specific to Nigerian context. Keep it concise and actionable.`,
+  learn:    n=>`Create a learning module for the KZ community:\n\nNode: "${n.title}"\nSummary: "${n.summary}"\n\n📖 CONCEPT: Simple explanation with a Northern Nigerian everyday analogy\n🔑 KEY PRINCIPLES: Three things to understand\n💼 PRACTICAL APPLICATION: How an Arewa builder applies this today using a phone\n⚠️ WATCH OUT: Common scams or mistakes in Nigeria context\n\nHausa analogies welcome. Max 280 words.`,
+  automate: n=>`Design an automation workflow:\n\nNode: "${n.title}"\nSummary: "${n.summary}"\n\n1. TRIGGER: What starts this\n2. STEPS: Three to five automation steps (n8n, Cloudflare Workers, Claude API)\n3. OUTPUT: What gets produced\n4. TOOLS: Free-first stack accessible from a phone\n5. EFFORT: Build time for a solo mobile developer\n\nFocus on saving five or more hours per week.`,
+  content:  n=>`Generate content for Kimiyyar Zahiri brand:\n\nNode: "${n.title}"\nSummary: "${n.summary}"\nTopic: ${n.topic}\n\n🐦 TWITTER/X THREAD (5 tweets): Educational, bold, Arewa-grounded\n📝 LINKEDIN POST (100 words): Professional, insight-driven\n💬 WHATSAPP MESSAGE (50 words): Simple, shareable, Hausa/English blend\n\nVoice: Direct, warm — like a brilliant elder brother explaining tech over suya.\nEnd every piece with #KimiyyarZahiri`,
+  track:    n=>`Create a tracking framework:\n\nNode: "${n.title}"\nStatus: ${n.status}\nLeverage: ${n.leverage}/5\n\n📊 SUCCESS METRICS: Three measurable KPIs\n📅 MILESTONES: 30/60/90/180 day targets\n🚦 HEALTH INDICATORS: Progress vs stalling signs\n🔄 REVIEW CADENCE: When and how to update\n\nContext: Northern Nigeria, KZ 18-month roadmap.`,
+};
+
+const RESEARCH_PROMPT = q => `You are the KZ Hub AI for Kimiyyar Zahiri — a digital education movement for Northern Nigeria.\n\nResearch question: "${q}"\n\nProvide a clear, specific, actionable answer grounded in:\n- Northern Nigerian and Arewa context where relevant\n- Islamic finance principles where applicable (flag Riba/Gharar risks)\n- Free and phone-accessible tools and resources\n- Current state in Nigeria's digital economy\n\nBe direct and practical. Use analogies familiar to Arewa communities. Max 350 words.`;
+
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+let nodes   = JSON.parse(localStorage.getItem('kz_nodes_v4') || 'null') || [];
+let edges   = JSON.parse(localStorage.getItem('kz_edges_v4') || 'null') || [];
+let selId   = null;
+let forceTag= null;
+let lang    = 'en';   // 'en' | 'ha'
+let hub     = 'all';
+let physicsOn = true;
+let network = null;
+let visNodes, visEdges;
+
+/* ══════════════════════════════════════
+   SAVE / LOAD
+══════════════════════════════════════ */
+function save() {
+  localStorage.setItem('kz_nodes_v4', JSON.stringify(nodes));
+  localStorage.setItem('kz_edges_v4', JSON.stringify(edges));
+}
+function getNode(id) { return nodes.find(n => n.id === id); }
+function getActive()  { return getNode(selId); }
+
+function uid() { return 'n' + Date.now().toString(36).toUpperCase().slice(-5); }
+
+function ensureNode(n) {
+  n.summary      = n.summary      || '';
+  n.status       = n.status       || 'concept';
+  n.leverage     = n.leverage     || n.weight || 3;
+  n.related      = n.related      || [];
+  n.notes        = n.notes        || [];
+  n.title_hausa  = n.title_hausa  || '';
+  n.summary_hausa= n.summary_hausa|| '';
+  n.createdAt    = n.createdAt    || new Date().toISOString();
+  n.updatedAt    = n.updatedAt    || new Date().toISOString();
+  n.aiGenerated  = n.aiGenerated  !== undefined ? n.aiGenerated : false;
+  return n;
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso), now = new Date(), df = now - d;
+  if (df < 60000)    return 'just now';
+  if (df < 3600000)  return Math.floor(df/60000)  + 'm ago';
+  if (df < 86400000) return Math.floor(df/3600000) + 'h ago';
+  return d.toLocaleDateString('en-NG', { day:'numeric', month:'short' });
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ══════════════════════════════════════
+   LANGUAGE
+══════════════════════════════════════ */
+const HAUSA_STRINGS = {
+  emptySubTxt: 'Hanyar iliminka za ta bayyana nan. Ka loda bayanai ko ka liqa rubutu.',
+  l1:'Fasaha', l2:'Amana', l3:'Canji', l4:'Basira',
+  'fl-hausa':'Hausa / Turanci',
+};
+
+function setLang(l) {
+  lang = l;
+  document.getElementById('btnEn').classList.toggle('active', l === 'en');
+  document.getElementById('btnHa').classList.toggle('active', l === 'ha');
+  if (l === 'ha') {
+    Object.entries(HAUSA_STRINGS).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    });
+  } else {
+    document.getElementById('emptySubTxt').textContent = 'Your knowledge network will appear here. Load seed data or paste text to begin.';
+    document.getElementById('l1').textContent = 'Technology';
+    document.getElementById('l2').textContent = 'Trust';
+    document.getElementById('l3').textContent = 'Transform';
+    document.getElementById('l4').textContent = 'Insight';
+    document.getElementById('fl-hausa').textContent = 'Hausa';
+  }
+  if (selId) renderNodeCard(getActive());
+  renderNodeList();
+}
+
+/* ══════════════════════════════════════
+   TOAST
+══════════════════════════════════════ */
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2600);
+}
+function feedback(msg) {
+  document.getElementById('fbMsg').textContent = msg;
+  setTimeout(() => document.getElementById('fbMsg').textContent = 'Graph OS ready', 5000);
+}
+
+/* ══════════════════════════════════════
+   STATS + PIPELINE
+══════════════════════════════════════ */
+function updateStats() {
+  document.getElementById('sN').textContent = nodes.length;
+  document.getElementById('sE').textContent = edges.length;
+  document.getElementById('nCount').textContent = nodes.length;
+}
+function pipe(step, state) {
+  const el = document.getElementById('ps-' + step);
+  if (el) el.className = 'pipe-step ' + state;
+}
+function pi(n, state) {
+  const d = document.getElementById('pi'+n), t = document.getElementById('pi'+n+'t');
+  const labels = {1:'Ingest ready',2:'Embedding',3:'Building graph',4:'Linking edges',5:'AI layer ready'};
+  if (d) { d.className = 'gp-dot ' + state; if(t) t.textContent = (state==='active'?'⟳ ':state==='done'?'✓ ':'')+labels[n]; }
+}
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ══════════════════════════════════════
+   VIS.JS GRAPH
+══════════════════════════════════════ */
+function initGraph() {
+  const container = document.getElementById('kz-graph');
+  visNodes = new vis.DataSet();
+  visEdges = new vis.DataSet();
+
+  const options = {
+    nodes: {
+      shape: 'dot',
+      borderWidth: 2,
+      font: { face: 'IBM Plex Mono', size: 11, color: '#1E1509', strokeWidth: 2, strokeColor: 'rgba(255,255,255,.85)' },
+      shadow: { enabled: true, size: 8, x: 0, y: 2, color: 'rgba(30,21,9,.10)' },
+    },
+    edges: {
+      width: 1.5,
+      color: { color: 'rgba(197,118,10,.35)', highlight: 'rgba(197,118,10,.9)', hover: 'rgba(197,118,10,.6)' },
+      font: { face: 'IBM Plex Mono', size: 9, color: 'rgba(30,21,9,.45)', strokeWidth: 2, strokeColor: '#fff' },
+      arrows: { to: { enabled: true, scaleFactor: .7 } },
+      smooth: { type: 'curvedCW', roundness: .15 },
+    },
+    physics: {
+      enabled: true,
+      forceAtlas2Based: { gravitationalConstant: -60, centralGravity: .004, springLength: 140, springConstant: .06, damping: .4 },
+      solver: 'forceAtlas2Based',
+      stabilization: { iterations: 150 },
+    },
+    interaction: {
+      hover: true,
+      tooltipDelay: 250,
+      zoomView: true,
+      dragView: true,
+    },
+    layout: { randomSeed: 42 },
+  };
+
+  network = new vis.Network(container, { nodes: visNodes, edges: visEdges }, options);
+
+  network.on('click', params => {
+    if (params.nodes.length > 0) selectNode(params.nodes[0]);
+    else { selId = null; showEmpty(); }
+  });
+
+  network.on('doubleClick', params => {
+    if (params.nodes.length > 0) {
+      network.focus(params.nodes[0], { scale: 1.4, animation: { duration: 400 } });
+    }
+  });
+}
+
+function nodeToVis(n) {
+  ensureNode(n);
+  const t = TOPICS[n.category] || TOPICS.insight;
+  const r  = 10 + (n.leverage || 3) * 3;
+  const lbl = lang === 'ha' && n.title_hausa ? n.title_hausa : n.title;
+  const shortLbl = lbl.length > 18 ? lbl.slice(0, 16) + '…' : lbl;
+  return {
+    id:    n.id,
+    label: shortLbl,
+    title: `<div style="font-family:IBM Plex Mono;font-size:12px;max-width:200px;padding:6px 8px;line-height:1.55"><b>${n.title}</b>${n.title_hausa?'<br><span style="color:#C5760A;font-family:Scheherazade New;font-size:14px">'+n.title_hausa+'</span>':''}<br><span style="color:#888;font-size:10px">${t.icon} ${t.label} · ⚡${n.leverage}/5</span><br><span style="font-size:11px">${(n.summary||'').slice(0,100)}${n.summary.length>100?'…':''}</span></div>`,
+    color: {
+      background: CAT_COLOR[n.category] + '1A',
+      border:     CAT_COLOR[n.category],
+      highlight:  { background: CAT_COLOR[n.category] + '35', border: CAT_COLOR[n.category] },
+      hover:      { background: CAT_COLOR[n.category] + '28', border: CAT_COLOR[n.category] },
+    },
+    size: r,
+    font: { color: n.id === selId ? CAT_COLOR[n.category] : '#1E1509' },
+    borderWidth: n.id === selId ? 3 : 2,
+    shadow: n.aiGenerated ? { enabled:true, size:14, color: CAT_COLOR[n.category]+'55', x:0, y:0 } : undefined,
+  };
+}
+
+function renderGraph() {
+  if (!network) initGraph();
+
+  // Build vis datasets
+  const vn = nodes.map(n => nodeToVis(n));
+  const ve = edges.map(e => ({
+    id: e.id || (e.from + '_' + e.to),
+    from: e.from, to: e.to,
+    label: e.label || '',
+    dashes: e.label === 'conflicts_with' || e.label === 'governs',
+    width: Math.min(e.strength || e.width || 1, 4),
+    color: { color: 'rgba(197,118,10,.32)', highlight: 'rgba(197,118,10,.9)' },
+  }));
+
+  visNodes.clear(); visNodes.add(vn);
+  visEdges.clear(); visEdges.add(ve);
+
+  document.getElementById('gEmpty').style.display = nodes.length ? 'none' : 'flex';
+}
+
+function updateNode(id) {
+  if (!visNodes) return;
+  const n = getNode(id);
+  if (n) { try { visNodes.update(nodeToVis(n)); } catch(e){} }
+}
+
+function fitGraph() {
+  if (network) network.fit({ animation: { duration: 450, easingFunction: 'easeInOutQuad' } });
+}
+
+function togglePhysics() {
+  physicsOn = !physicsOn;
+  if (network) network.setOptions({ physics: { enabled: physicsOn } });
+  const btn = document.getElementById('tbPhysics');
+  btn.classList.toggle('on', physicsOn);
+  btn.textContent = physicsOn ? '⬤ Physics' : '⬤ Static';
+}
+
+/* ══════════════════════════════════════
+   NODE LIST
+══════════════════════════════════════ */
+function renderNodeList() {
+  const list = document.getElementById('nodeList');
+  const q = (document.getElementById('searchInp').value || '').toLowerCase().trim();
+  const filtered = nodes.filter(n => {
+    if (!q) return true;
+    return n.title.toLowerCase().includes(q) || (n.title_hausa||'').toLowerCase().includes(q) || (n.summary||'').toLowerCase().includes(q);
+  });
+  if (!filtered.length) {
+    list.innerHTML = '<div style="font-size:10px;color:var(--ink3);text-align:center;padding:14px 0">No nodes found</div>';
+    return;
+  }
+  list.innerHTML = filtered.slice().reverse().map(n => {
+    ensureNode(n);
+    const c = CAT_COLOR[n.category] || '#888';
+    const lnks = edges.filter(e => e.from === n.id || e.to === n.id).length;
+    const title = lang === 'ha' && n.title_hausa ? n.title_hausa : n.title;
+    return `<div class="nitem ${n.id===selId?'sel':''}" onclick="selectNode('${n.id}')">
+      <div class="ndot" style="background:${c};box-shadow:0 0 5px ${c}55"></div>
+      <div style="min-width:0">
+        <div class="n-title">${title}</div>
+        <div class="n-sub">${TOPICS[n.category]?.label||n.category} · ⚡${n.leverage} · ${lnks} link${lnks!==1?'s':''}</div>
+        ${n.title_hausa&&lang==='en'?`<div class="n-hausa">${n.title_hausa}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   NODE SELECTION
+══════════════════════════════════════ */
+function selectNode(id) {
+  selId = id;
+  const n = getNode(id);
+  if (!n) return;
+  ensureNode(n);
+
+  // Highlight in graph
+  if (network && visNodes) {
+    visNodes.update(nodes.map(nd => ({
+      id: nd.id,
+      borderWidth: nd.id === id ? 3.5 : 2,
+      font: { color: nd.id === id ? CAT_COLOR[nd.category] : '#1E1509' },
+    })));
+  }
+
+  renderNodeCard(n);
+  renderNodeList();
+  pipe('explore', 'done');
+  pipe('act', 'active');
+}
+
+function showEmpty() {
+  document.getElementById('rpEmpty').style.display = 'flex';
+  document.getElementById('nodeCard').classList.remove('vis');
+}
+
+/* ══════════════════════════════════════
+   NODE CARD RENDER
+══════════════════════════════════════ */
+function renderNodeCard(n) {
+  ensureNode(n);
+  const topic = TOPICS[n.category] || TOPICS.insight;
+  const status = STATUSES.find(s => s.id === n.status) || STATUSES[0];
+  const stepIdx = STATUSES.findIndex(s => s.id === n.status);
+
+  document.getElementById('rpEmpty').style.display = 'none';
+  document.getElementById('nodeCard').classList.add('vis');
+
+  // Glyph
+  const glyph = document.getElementById('ncGlyph');
+  glyph.textContent = topic.icon;
+  glyph.style.background = CAT_COLOR[n.category] + '18';
+  glyph.style.borderColor = CAT_COLOR[n.category] + '28';
+
+  // Title
+  const titleEl = document.getElementById('ncTitle');
+  titleEl.textContent = lang === 'ha' && n.title_hausa ? n.title_hausa : n.title;
+
+  // Hausa header
+  const hausaHdr = document.getElementById('ncHausa');
+  if (n.title_hausa && lang === 'en') {
+    hausaHdr.textContent = n.title_hausa;
+    hausaHdr.style.display = 'block';
+  } else hausaHdr.style.display = 'none';
+
+  // Meta
+  const catLabel = lang === 'ha' ? topic.hausa : topic.label;
+  document.getElementById('ncMeta').innerHTML = `
+    <span class="cat-badge ${topic.cls}">${topic.icon} ${catLabel}</span>
+    <span class="nc-meta-txt">⚡${n.leverage}/5</span>
+    <span class="nc-meta-txt">${n.related.length} link${n.related.length!==1?'s':''}</span>`;
+
+  // Summary
+  const sumEl = document.getElementById('fSum');
+  sumEl.value = (lang === 'ha' && n.summary_hausa) ? n.summary_hausa : n.summary;
+  sumEl.readOnly = true;
+  sumEl.onclick = function() { this.readOnly = false; this.focus(); };
+  sumEl.onblur = function() {
+    if (lang === 'ha') n.summary_hausa = this.value;
+    else n.summary = this.value;
+    n.updatedAt = new Date().toISOString();
+    this.readOnly = true; save();
+  };
+
+  // Hausa fields
+  document.getElementById('fHTitle').value = n.title_hausa   || '';
+  document.getElementById('fHSum').value   = n.summary_hausa || '';
+
+  // Topic selector
+  const tc = CAT_COLOR[n.category];
+  document.getElementById('fTopicWrap').innerHTML = `
+    <div class="topic-badge ${topic.cls}" style="background:${tc}12;border-color:${tc}30">
+      <span>${topic.icon}</span>
+      <select class="topic-sel ${topic.cls}" onchange="changeTopic(this.value)" style="color:${tc}">
+        ${Object.entries(TOPICS).map(([k,v]) => `<option value="${k}" ${k===n.category?'selected':''}>${lang==='ha'?v.hausa:v.label}</option>`).join('')}
+      </select>
+    </div>`;
+
+  // Related nodes
+  renderRelated(n);
+
+  // Leverage
+  const s = n.leverage;
+  document.getElementById('fLevN').textContent = s;
+  document.getElementById('fLevN').style.color = LEV_CLR[s];
+  document.getElementById('fLevF').style.width = (s/5*100) + '%';
+  document.getElementById('fLevF').style.background = `linear-gradient(90deg,${LEV_CLR[s]},${LEV_CLR[s]}cc)`;
+  document.getElementById('fLevF').style.boxShadow  = `0 0 5px ${LEV_CLR[s]}44`;
+  document.getElementById('fLevL').textContent = LEV_LBL[s];
+
+  // Status
+  const sb = document.getElementById('sBadge');
+  sb.style.color = status.color;
+  document.getElementById('sDot').style.color = status.color;
+  document.getElementById('sTxt').textContent = lang === 'ha' ? status.hausa : status.label;
+  document.getElementById('sMenu').innerHTML = STATUSES.map(st =>
+    `<div class="sopt" onclick="setStatus('${st.id}')">
+      <div class="sopt-dot" style="background:${st.color};box-shadow:0 0 4px ${st.color}55"></div>
+      <span>${lang==='ha'?st.hausa:st.label}</span><span class="sopt-d">${st.desc}</span>
+    </div>`).join('');
+
+  // Steps
+  document.getElementById('fSteps').innerHTML = STATUSES.map((st, i) => {
+    const done = i < stepIdx, active = i === stepIdx;
+    return `<div class="stp">
+      <div class="stp-dot ${done?'done':active?'active':''}" title="${lang==='ha'?st.hausa:st.label}"></div>
+      ${i < STATUSES.length-1 ? `<div class="stp-line ${done?'done':''}"></div>` : ''}
+    </div>`;
+  }).join('');
+
+  // Footer
+  document.getElementById('fCreated').textContent = fmtDate(n.createdAt);
+  document.getElementById('fUpdated').textContent = fmtDate(n.updatedAt);
+}
+
+function renderRelated(n) {
+  const relEl = document.getElementById('fRelated');
+  const others = nodes.filter(nd => nd.id !== n.id && !n.related.includes(nd.id));
+  relEl.innerHTML = (n.related || []).map(rid => {
+    const rn = getNode(rid); if (!rn) return '';
+    const rc = CAT_COLOR[rn.category];
+    const short = rn.title.length > 22 ? rn.title.slice(0,20) + '…' : rn.title;
+    return `<div class="rnode" onclick="selectNode('${rid}')">
+      <div class="rdot" style="background:${rc}"></div>${short}
+      <span onclick="event.stopPropagation();unlinkNode('${rid}')" style="margin-left:3px;font-size:10px;color:var(--ink3);opacity:.6">×</span>
+    </div>`;
+  }).join('');
+  if (others.length) {
+    relEl.innerHTML += `<div class="rel-picker" id="pickerWrap">
+      <button class="add-rel" onclick="togglePicker(event)">+ Link</button>
+      <div class="rel-menu" id="pickerMenu">
+        ${others.map(nd => {
+          const t = TOPICS[nd.category];
+          return `<div class="rpick" onclick="linkNode('${nd.id}')">
+            <div class="rdot" style="background:${CAT_COLOR[nd.category]}"></div>
+            <span>${t.icon} ${nd.title.length>28?nd.title.slice(0,26)+'…':nd.title}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+}
+
+/* ══════════════════════════════════════
+   TITLE EDIT
+══════════════════════════════════════ */
+let _editing = false;
+function toggleTitleEdit() {
+  const el  = document.getElementById('ncTitle');
+  const btn = document.getElementById('editBtn');
+  _editing = !_editing;
+  el.contentEditable = _editing ? 'true' : 'false';
+  btn.textContent = _editing ? '✓' : '✎';
+  btn.style.color = _editing ? 'var(--green)' : '';
+  if (_editing) { el.focus(); const r = document.createRange(); r.selectNodeContents(el); window.getSelection().removeAllRanges(); window.getSelection().addRange(r); }
+  else {
+    const n = getActive(); if (!n) return;
+    const newT = el.textContent.trim();
+    if (newT && newT !== n.title) { n.title = newT; }
+    n.updatedAt = new Date().toISOString();
+    renderNodeList(); updateNode(n.id); save(); toast('✓ Saved');
+  }
+}
+
+/* ══════════════════════════════════════
+   LEVERAGE / TOPIC / STATUS
+══════════════════════════════════════ */
+function adjScore(d) {
+  const n = getActive(); if (!n) return;
+  n.leverage = Math.min(5, Math.max(1, (n.leverage||3) + d));
+  n.updatedAt = new Date().toISOString();
+  save(); renderNodeCard(n); renderNodeList(); updateNode(n.id);
+}
+
+function changeTopic(val) {
+  const n = getActive(); if (!n) return;
+  n.category = val; n.updatedAt = new Date().toISOString();
+  save(); renderNodeCard(n); renderNodeList(); updateNode(n.id);
+}
+
+function toggleStatusMenu() { document.getElementById('sMenu').classList.toggle('open'); }
+
+function setStatus(id) {
+  const n = getActive(); if (!n) return;
+  n.status = id; n.updatedAt = new Date().toISOString();
+  document.getElementById('sMenu').classList.remove('open');
+  save(); renderNodeCard(n);
+  const st = STATUSES.find(s => s.id === id);
+  toast(`Status → ${lang==='ha'?st.hausa:st.label}`);
+}
+
+/* ══════════════════════════════════════
+   RELATED NODES
+══════════════════════════════════════ */
+function togglePicker(e) { e.stopPropagation(); document.getElementById('pickerMenu').classList.toggle('open'); }
+
+function linkNode(targetId) {
+  const n = getActive(); if (!n || n.related.includes(targetId)) return;
+  n.related.push(targetId);
+  const eid = n.id + '_' + targetId;
+  edges.push({ id: eid, from: n.id, to: targetId, label: 'relates_to', strength: 1 });
+  n.updatedAt = new Date().toISOString();
+  save(); renderNodeCard(n); renderNodeList(); updateStats();
+  if (visEdges) visEdges.add({ id: eid, from: n.id, to: targetId });
+  toast('⬡ Linked → ' + (getNode(targetId)?.title || targetId));
+}
+
+function unlinkNode(targetId) {
+  const n = getActive(); if (!n) return;
+  n.related = n.related.filter(id => id !== targetId);
+  const eid = n.id + '_' + targetId;
+  edges = edges.filter(e => e.id !== eid && !(e.from===n.id&&e.to===targetId) && !(e.from===targetId&&e.to===n.id));
+  n.updatedAt = new Date().toISOString();
+  save(); renderNodeCard(n); renderNodeList(); updateStats();
+  if (visEdges) { try { visEdges.remove(eid); } catch(e){} }
+  toast('Unlinked');
+}
+
+/* ══════════════════════════════════════
+   HAUSA TRANSLATION
+══════════════════════════════════════ */
+let _hausaTimer = null;
+function autoSaveHausa() {
+  clearTimeout(_hausaTimer);
+  _hausaTimer = setTimeout(() => {
+    const n = getActive(); if (!n) return;
+    n.title_hausa   = document.getElementById('fHTitle').value.trim();
+    n.summary_hausa = document.getElementById('fHSum').value.trim();
+    n.updatedAt = new Date().toISOString();
+    const h = document.getElementById('ncHausa');
+    if (n.title_hausa && lang === 'en') { h.textContent = n.title_hausa; h.style.display = 'block'; }
+    else h.style.display = 'none';
+    save();
+  }, 700);
+}
+
+async function translateHausa() {
+  if (!getApiKey()) { toast('⚠ Add API key in ⚙ settings'); openSettings(); return; }
+  const n = getActive(); if (!n) return;
+  const btn = document.getElementById('xlBtn'), sts = document.getElementById('xlStatus');
+  btn.disabled = true; btn.innerHTML = '<span class="spin" style="color:var(--gold)"></span> Fassara…'; sts.textContent = '';
+  try {
+    const res = await fetch(getEndpoint(), {
+      method: 'POST', headers: buildHeaders(),
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001', max_tokens: 500,
+        system: 'You are a Hausa language expert and Northern Nigerian cultural translator. Return ONLY valid JSON, no markdown, no explanation.',
+        messages: [{ role: 'user', content: `Translate to natural, idiomatic Hausa:\n\nTitle: "${n.title}"\nSummary: "${n.summary}"\n\nReturn ONLY: {"title_hausa":"<hausa>","summary_hausa":"<hausa 2-3 sentences>"}` }]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || 'API error');
+    const parsed = JSON.parse((data.content?.[0]?.text || '{}').replace(/```json|```/g,'').trim());
+    document.getElementById('fHTitle').value   = parsed.title_hausa   || '';
+    document.getElementById('fHSum').value     = parsed.summary_hausa || '';
+    n.title_hausa   = parsed.title_hausa   || '';
+    n.summary_hausa = parsed.summary_hausa || '';
+    n.updatedAt = new Date().toISOString();
+    const h = document.getElementById('ncHausa');
+    if (n.title_hausa && lang === 'en') { h.textContent = n.title_hausa; h.style.display = 'block'; }
+    save(); renderNodeList(); updateNode(n.id);
+    sts.textContent = '✓ Done'; sts.style.color = 'var(--green)';
+    toast('🌙 Hausa translation saved');
+  } catch(e) {
+    sts.textContent = e.message; sts.style.color = 'var(--red)';
+    toast('⚠ Translation failed');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '✦ AI Fassara';
+    setTimeout(() => { sts.textContent = ''; }, 4000);
+  }
+}
+
+/* ══════════════════════════════════════
+   RESEARCH (main query box)
+══════════════════════════════════════ */
+async function research() {
+  const q = document.getElementById('queryInput').value.trim();
+  if (!q) { toast('⚠ Enter a research question'); return; }
+  if (!getApiKey()) { toast('⚠ Add API key in ⚙ settings'); openSettings(); return; }
+
+  const btn  = document.getElementById('researchBtn');
+  const rbTxt= document.getElementById('rbTxt');
+  btn.disabled = true; rbTxt.innerHTML = '<span class="spin" style="color:#fff"></span> Researching…';
+
+  const wrap   = document.getElementById('rOutWrap');
+  const loading= document.getElementById('rLoading');
+  const output = document.getElementById('rOutput');
+  wrap.classList.add('open');
+  loading.style.display = 'flex';
+  output.style.display  = 'none';
+  output.textContent    = '';
+
+  try {
+    const res = await fetch(getEndpoint(), {
+      method: 'POST', headers: buildHeaders(),
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001', max_tokens: 700,
+        system: `You are the KZ Hub AI for Kimiyyar Zahiri — a digital education movement for Northern Nigeria. You understand Arewa culture, Hausa language context, Nigerian fintech, Islamic finance, and Web3 in emerging markets. Always be specific, actionable, and grounded in real Nigerian context.`,
+        messages: [{ role: 'user', content: RESEARCH_PROMPT(q) }]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || `API error ${res.status}`);
+    const text = data.content?.[0]?.text || 'No response.';
+    loading.style.display = 'none';
+    output.style.display  = 'block';
+    output.textContent    = text;
+    feedback('Research complete');
+  } catch(e) {
+    loading.style.display = 'none';
+    output.style.display  = 'block';
+    output.textContent = '⚠ ' + e.message + '\n\nCheck API key in ⚙ settings.';
+  } finally {
+    btn.disabled = false; rbTxt.innerHTML = '⚡ Research';
+  }
+}
+
+function closeROut() {
+  document.getElementById('rOutWrap').classList.remove('open');
+}
+
+/* ══════════════════════════════════════
+   NODE AI ACTIONS
+══════════════════════════════════════ */
+async function runAction(type) {
+  const n = getActive();
+  if (!n) { toast('⚠ Select a node first'); return; }
+  if (hub !== 'all' && hub !== type) return;
+  if (!getApiKey()) { toast('⚠ Add API key in ⚙ settings'); openSettings(); return; }
+  ensureNode(n);
+
+  const wrap  = document.getElementById('aiWrap');
+  const loading = document.getElementById('aiLoad');
+  const out   = document.getElementById('aiOut');
+  const lbl   = document.getElementById('aiLbl');
+
+  lbl.textContent = '● ' + ACT_LBL[type];
+  lbl.style.color = ACT_CLR[type];
+  wrap.classList.add('open');
+  loading.style.display = 'flex';
+  out.style.display = 'none'; out.textContent = '';
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  pipe('act','active'); pipe('learn','active');
+
+  try {
+    const nd = { title: n.title, summary: n.summary || n.title, topic: TOPICS[n.category]?.label || n.category, status: n.status, leverage: n.leverage };
+    const res = await fetch(getEndpoint(), {
+      method: 'POST', headers: buildHeaders(),
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001', max_tokens: 1000,
+        system: `You are the KZ Hub AI — intelligence layer of Kimiyyar Zahiri, a digital education movement for Northern Nigeria. You understand Arewa culture, Hausa context, Nigerian fintech, Web3 in emerging markets, Islamic finance, and digital challenges in Northern Nigeria. Always be specific, actionable, and grounded in real Nigerian context.`,
+        messages: [{ role: 'user', content: ACT_PROMPTS[type](nd) }]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || `API error ${res.status}`);
+    const text = data.content?.[0]?.text || 'No response.';
+    loading.style.display = 'none';
+    out.style.display  = 'block';
+    out.textContent    = text;
+    if (!n.actionOutputs) n.actionOutputs = {};
+    n.actionOutputs[type] = { text, generatedAt: new Date().toISOString() };
+    if (type==='research'||type==='content') n.aiGenerated = true;
+    n.updatedAt = new Date().toISOString();
+    save(); renderNodeCard(n); updateNode(n.id);
+    pipe('act','done'); pipe('learn','done');
+    feedback('AI action complete');
+  } catch(e) {
+    loading.style.display = 'none';
+    out.style.display = 'block';
+    out.textContent = '⚠ ' + e.message + '\n\nCheck API key in ⚙ settings.';
+  }
+}
+
+function closeAI() { document.getElementById('aiWrap').classList.remove('open'); }
+
+/* ══════════════════════════════════════
+   INGEST PIPELINE
+══════════════════════════════════════ */
+async function processIngest() {
+  const text = document.getElementById('ingestInput').value.trim();
+  if (!text) { toast('Paste some text first!'); return; }
+  if (!getApiKey()) { toast('⚠ Add API key in ⚙ settings'); openSettings(); return; }
+
+  const btn  = document.getElementById('ingestBtn');
+  const btxt = document.getElementById('ingestTxt');
+  btn.disabled = true; btxt.innerHTML = '<span class="spin" style="color:#fff"></span> Processing…';
+
+  pipe('ingest','done'); pipe('embed','active'); pi(2,'active');
+  await delay(300);
+  pi(2,'done'); pi(3,'active'); pipe('embed','done'); pipe('graph','active');
+
+  try {
+    const existing = nodes.map(n => n.title).join(', ');
+    const res = await fetch(getEndpoint(), {
+      method: 'POST', headers: buildHeaders(),
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001', max_tokens: 1000,
+        system: `You are a semantic knowledge extractor for Kimiyyar Zahiri. Extract structured knowledge graph data. Return ONLY valid JSON, no markdown:\n{"nodes":[{"id":"slug","title":"Short title (max 5 words)","summary":"2-3 sentences in Nigerian context","category":"tech|trust|transform|insight","weight":1-5}],"edges":[{"from":"id","to":"id","label":"relates_to|enables|builds_on|requires|addresses"}]}\nExtract 3-7 concepts. Existing nodes: ${existing||'none'}.`,
+        messages: [{ role: 'user', content: `Extract knowledge graph from:\n\n${text}` }]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || 'API error');
+    const clean = (data.content?.[0]?.text || '{}').replace(/```json|```/g,'').trim();
+    const ext = JSON.parse(clean);
+
+    await delay(250); pi(3,'done'); pi(4,'active');
+
+    let added = 0;
+    (ext.nodes || []).forEach(n => {
+      if (!nodes.find(e => e.id === n.id)) {
+        if (forceTag) n.category = forceTag;
+        n.leverage = n.weight || 3;
+        ensureNode(n); nodes.push(n); added++;
+      }
+    });
+    (ext.edges || []).forEach(e => {
+      const ex = edges.find(x => (x.from===e.from&&x.to===e.to)||(x.from===e.to&&x.to===e.from));
+      if (!ex) edges.push({ id: e.from+'_'+e.to, from: e.from, to: e.to, label: e.label, strength: 1 });
+    });
+
+    await delay(250); pi(4,'done'); pi(5,'active'); pipe('graph','done'); pipe('explore','active');
+    save(); renderGraph(); renderNodeList(); updateStats();
+    await delay(350); pi(5,'done'); pipe('explore','done'); pipe('act','active');
+
+    document.getElementById('ingestInput').value = '';
+    forceTag = null; document.querySelectorAll('.mtag').forEach(t => t.classList.remove('sel'));
+    feedback(`+${added} concept${added!==1?'s':''} extracted`);
+    toast(`✓ ${added} concept${added!==1?'s':''} added to graph`);
+  } catch(e) {
+    toast('⚠ ' + e.message);
+    ['embed','graph'].forEach(s => pipe(s,''));
+  } finally {
+    btn.disabled = false; btxt.innerHTML = '⚡ Process → Graph';
+  }
+}
+
+/* ══════════════════════════════════════
+   WHATSAPP SHARE
+══════════════════════════════════════ */
+function shareWA() {
+  const n = getActive(); if (!n) return;
+  const msg = `*${n.title}*${n.title_hausa?'\n_'+n.title_hausa+'_':''}\n\n${n.summary}\n\n⚡ Leverage: ${n.leverage}/5 · Status: ${n.status}\n\n_Kimiyyar Zahiri Tech Hub_\nFahimta. Aminci. Ci Gaba.\n#KimiyyarZahiri #ArewaDigital`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+}
+
+/* ══════════════════════════════════════
+   EXPORT CARD
+══════════════════════════════════════ */
+function openExport() {
+  const n = getActive(); if (!n) return;
+  const topic  = TOPICS[n.category];
+  const status = STATUSES.find(s => s.id === n.status) || STATUSES[0];
+  const related = (n.related||[]).map(id => getNode(id)).filter(Boolean);
+
+  document.getElementById('expCard').innerHTML = `
+    <div class="ec-top">
+      <div class="ec-kz-brand">
+        <div class="ec-kz">KZ</div>
+        <div>
+          <div style="font-family:'Amiri',serif;font-weight:700;font-size:13px">Kimiyyar Zahiri Tech Hub</div>
+          <div style="font-size:10px;color:var(--ink3)">Knowledge Node · ${new Date().toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'})}</div>
+        </div>
+      </div>
+      <div style="font-size:9px;color:var(--ink3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">${n.id} · ${topic.icon} ${topic.label}</div>
+      <div class="ec-title">${escHtml(n.title)}</div>
+      ${n.title_hausa?`<div class="ec-hausa">${escHtml(n.title_hausa)}</div>`:''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="cat-badge ${topic.cls}">${topic.icon} ${topic.label}</span>
+        <span class="cat-badge" style="color:${status.color};border-color:${status.color}40;background:${status.color}10">${status.label}</span>
+        <span class="cat-badge" style="color:var(--gold);border-color:var(--border);background:var(--gold-d)">⚡ ${n.leverage}/5 ${LEV_LBL[n.leverage]}</span>
+      </div>
+    </div>
+    <div class="ec-body">
+      <div class="ec-sec">Idea Summary</div>
+      <div class="ec-sum">${escHtml(n.summary)}</div>
+      ${n.summary_hausa?`<div class="ec-sec">Hausa / Turanci</div><div style="font-family:'Scheherazade New',serif;font-size:14px;color:var(--gold);direction:rtl;line-height:1.7;margin-bottom:16px">${escHtml(n.summary_hausa)}</div>`:''}
+      <div class="ec-stat-grid">
+        <div class="ec-stat"><div class="ec-stat-v">${n.leverage}/5</div><div class="ec-stat-k">Leverage</div></div>
+        <div class="ec-stat"><div class="ec-stat-v">${related.length}</div><div class="ec-stat-k">Links</div></div>
+        <div class="ec-stat"><div class="ec-stat-v">${(n.notes||[]).length}</div><div class="ec-stat-k">Notes</div></div>
+      </div>
+      ${related.length?`<div class="ec-sec">Linked Nodes</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px">${related.map(r=>`<span style="font-size:11px;color:var(--blue);background:var(--blue-d);border:1px solid rgba(26,62,140,.2);border-radius:4px;padding:2px 8px">${TOPICS[r.category]?.icon||'◎'} ${r.title.length>22?r.title.slice(0,20)+'…':r.title}</span>`).join('')}</div>`:''}
+    </div>
+    <div class="ec-foot">
+      <div>Kimiyyar Zahiri Knowledge Graph OS · ${n.id}</div>
+      <div class="ec-wm">کیمیار ظاہری</div>
+    </div>`;
+
+  document.getElementById('expBg').classList.add('open');
+}
+function closeExp() { document.getElementById('expBg').classList.remove('open'); }
+
+/* ══════════════════════════════════════
+   DUPLICATE / DELETE
+══════════════════════════════════════ */
+function dupNode() {
+  const src = getActive(); if (!src) return;
+  const dup = { ...JSON.parse(JSON.stringify(src)), id: uid(), title: src.title + ' (copy)', notes: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  nodes.push(dup);
+  save(); renderGraph(); renderNodeList(); updateStats(); selectNode(dup.id);
+  toast('⧉ Duplicated');
+}
+
+function delNode() {
+  if (!selId) return;
+  if (nodes.length === 1) { toast('⚠ Cannot delete last node'); return; }
+  const n = getActive();
+  if (!confirm(`Delete "${n?.title}"?`)) return;
+  nodes  = nodes.filter(x => x.id !== selId);
+  edges  = edges.filter(e => e.from !== selId && e.to !== selId);
+  selId  = nodes[0]?.id || null;
+  save(); renderGraph(); renderNodeList(); updateStats();
+  if (selId) selectNode(selId); else showEmpty();
+  toast('🗑 Deleted');
+}
+
+/* ══════════════════════════════════════
+   CLEAR GRAPH
+══════════════════════════════════════ */
+function clearGraph() {
+  if (!confirm('Clear the entire knowledge graph?')) return;
+  nodes = []; edges = []; selId = null; save();
+  renderGraph(); renderNodeList(); updateStats(); showEmpty();
+  ['ingest','embed','graph','explore','act','learn'].forEach(s => pipe(s, s==='ingest'?'done':''));
+  [1,2,3,4,5].forEach(n => pi(n, n===1?'done':''));
+  feedback('Graph cleared');
+}
+
+/* ══════════════════════════════════════
+   CREATE NODE MODAL
+══════════════════════════════════════ */
+function openNewModal()    { document.getElementById('newModal').classList.add('open'); }
+function closeModal(id)    { document.getElementById(id).classList.remove('open'); }
+function closeMBg(e, id)   { if (e.target === e.currentTarget) closeModal(id); }
+
+function createNode() {
+  const title = document.getElementById('mTitle').value.trim();
+  if (!title) { toast('⚠ Title required'); return; }
+  const n = {
+    id: uid(), title,
+    summary:  document.getElementById('mSum').value.trim() || title,
+    category: document.getElementById('mCat').value,
+    leverage: parseInt(document.getElementById('mLev').value) || 3,
+    status: 'concept', related: [], notes: [],
+    title_hausa: '', summary_hausa: '',
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    aiGenerated: false,
+  };
+  ensureNode(n); nodes.push(n);
+  save(); renderGraph(); renderNodeList(); updateStats(); closeModal('newModal'); selectNode(n.id);
+  ['mTitle','mSum'].forEach(id => document.getElementById(id).value = '');
+  toast(`✦ Node: ${title}`);
+}
+
+/* ══════════════════════════════════════
+   HUB + TAGS
+══════════════════════════════════════ */
+function setHub(el, h) {
+  document.querySelectorAll('.hub .hbtn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on'); hub = h;
+}
+
+function toggleTag(el, tag) {
+  document.querySelectorAll('.mtag').forEach(t => t.classList.remove('sel'));
+  forceTag = forceTag === tag ? null : tag;
+  if (forceTag) el.classList.add('sel');
+}
+
+function exportJSON() {
+  const data = { meta: { version:'1.0', project:'Kimiyyar Zahiri Tech Hub', exported: new Date().toISOString() }, nodes, edges };
+  const b = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(b);
+  a.download = 'kz-graph-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click(); toast('↗ JSON exported');
+}
+
+/* ══════════════════════════════════════
+   API SETTINGS
+══════════════════════════════════════ */
+let _apiMode  = localStorage.getItem('kz_api_mode')   || 'personal';
+
+function getApiKey()  { return localStorage.getItem('kz_apikey') || ''; }
+function getEndpoint() {
+  if (_apiMode === 'community') {
+    const p = localStorage.getItem('kz_proxy') || '';
+    if (p) return p.replace(/\/$/,'') + '/api/chat';
+  }
+  // Personal mode — check for worker URL override
+  const w = localStorage.getItem('kz_worker') || WORKER_URL;
+  if (w && w !== 'YOUR_WORKER_URL_HERE') return w;
+  return 'https://api.anthropic.com/v1/messages';
+}
+function buildHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  if (_apiMode === 'personal') {
+    const k = getApiKey();
+    if (k) {
+      h['x-api-key'] = k;
+      h['anthropic-version'] = '2023-06-01';
+      h['anthropic-dangerous-direct-browser-access'] = 'true';
+    }
+  }
+  return h;
+}
+
+function openSettings() {
+  document.getElementById('sKey').value   = getApiKey();
+  document.getElementById('sProxy').value = localStorage.getItem('kz_proxy') || '';
+  setApiMode(_apiMode, false); updateConnStatus();
+  document.getElementById('settingsModal').classList.add('open');
+}
+function closeSettings() { closeModal('settingsModal'); }
+
+function setApiMode(mode, save=true) {
+  _apiMode = mode;
+  document.getElementById('mPersonal').classList.toggle('on',  mode==='personal');
+  document.getElementById('mCommunity').classList.toggle('on', mode==='community');
+  document.getElementById('sPersonal').style.display  = mode==='personal'  ? 'block' : 'none';
+  document.getElementById('sCommunity').style.display = mode==='community' ? 'block' : 'none';
+  document.getElementById('sStatus').style.display = 'none';
+  if (save) localStorage.setItem('kz_api_mode', mode);
+}
+
+function saveSettings() {
+  const key   = document.getElementById('sKey').value.trim();
+  const proxy = document.getElementById('sProxy').value.trim();
+  if (_apiMode === 'personal' && !key) { showSStatus('⚠ Paste your API key', 'warn'); return; }
+  if (_apiMode === 'community' && !proxy) { showSStatus('⚠ Paste your Worker/proxy URL', 'warn'); return; }
+  localStorage.setItem('kz_api_mode', _apiMode);
+  localStorage.setItem('kz_apikey',   key);
+  localStorage.setItem('kz_proxy',    proxy);
+  updateConnStatus(); closeSettings(); toast('✓ Settings saved');
+}
+
+async function testConn() {
+  const btn = document.getElementById('testTxt');
+  btn.innerHTML = '<span class="spin" style="color:var(--gold)"></span>';
+  showSStatus('Testing…', 'tip');
+  try {
+    const res = await fetch(getEndpoint(), {
+      method:'POST', headers: buildHeaders(),
+      body: JSON.stringify({ model:'claude-haiku-4-5-20251001', max_tokens:10, messages:[{role:'user',content:'Say: ok'}] })
+    });
+    const d = await res.json();
+    if (d?.content?.[0]?.text || d?.id) showSStatus('✅ Connected! AI features working.', 'win');
+    else if (d?.error) showSStatus('❌ ' + d.error?.message, 'warn');
+    else showSStatus('⚠ Unexpected response', 'warn');
+  } catch(e) { showSStatus('❌ Could not connect — check URL or key', 'warn'); }
+  btn.textContent = '↗ Test';
+}
+
+function showSStatus(msg, type) {
+  const el = document.getElementById('sStatus');
+  el.style.display = 'block'; el.textContent = msg;
+  const styles = {
+    tip:  'background:var(--blue-d);border:1px solid rgba(26,62,140,.25);color:var(--blue)',
+    win:  'background:var(--green-d);border:1px solid rgba(26,107,58,.25);color:var(--green)',
+    warn: 'background:var(--red-d);border:1px solid rgba(140,26,26,.25);color:var(--red)',
+  };
+  el.setAttribute('style', `display:block;padding:9px 12px;border-radius:var(--rs);font-size:11px;${styles[type]||styles.tip}`);
+}
+
+function updateConnStatus() {
+  const dot = document.getElementById('cDot'), msg = document.getElementById('cMsg'), btn = document.getElementById('settingsBtn');
+  const key = getApiKey(), proxy = localStorage.getItem('kz_proxy')||'';
+  if (_apiMode==='personal' && key) {
+    dot.style.background='var(--green)'; msg.style.color='var(--green)'; msg.textContent='🔑 Personal key configured'; btn.style.color='var(--green)';
+  } else if (_apiMode==='community' && proxy) {
+    dot.style.background='var(--blue)'; msg.style.color='var(--blue)'; msg.textContent='🌐 Worker: '+proxy.replace('https://','').split('/')[0]; btn.style.color='var(--blue)';
+  } else {
+    dot.style.background='var(--red)'; msg.style.color='var(--ink3)'; msg.textContent='Not configured — click ⚙ to set up'; btn.style.color='var(--red)';
+  }
+}
+
+/* ══════════════════════════════════════
+   SEED DATA (14 nodes)
+══════════════════════════════════════ */
+function loadSeed() {
+  if (nodes.length > 0 && !confirm('Add seed knowledge nodes to your graph?')) return;
+  const SEED_NODES = [
+    { id:'blockchain-nigeria',   title:'Blockchain in Nigeria',       title_hausa:'Blockchain a Najeriya',            category:'tech',      leverage:5, status:'research',  summary:'Decentralized ledger technology for Northern Nigerian contexts — micro-loans, supply chain, digital identity.',                                                               summary_hausa:'Fasahar blockchain ta daidaita da yanayin Arewacin Najeriya — rance, sarrafa kaya, da ganewa ta dijital.' },
+    { id:'hausa-tech-education', title:'Hausa Tech Education',        title_hausa:'Ilimin Fasaha da Harshen Hausa',   category:'transform', leverage:4, status:'prototype', summary:'Building the first Hausa-language knowledge base for digital tools, crypto, AI, and the new economy.',                                                               summary_hausa:'Gina farkon ilimin fasaha da Harshen Hausa don kayan dijital, crypto, AI, da tattalin arzikin zamani.' },
+    { id:'crypto-trust-deficit', title:'Crypto Trust Deficit',        title_hausa:'Rashin Amana a Crypto',           category:'trust',     leverage:4, status:'research',  summary:'Post-MMM scam trauma creates deep resistance to digital finance in Arewa communities.',                                                                             summary_hausa:'Bayan zagon kwasar MMM, akwai tsoro da rashin amana wajen amfani da kayan kudi na dijital a yankin Arewa.' },
+    { id:'arewa-digital-youth',  title:'Arewa Digital Youth',         title_hausa:'Matasan Arewa na Dijital',        category:'insight',   leverage:5, status:'growth',    summary:'Young Northern Nigerians 18-35 seeking economic opportunity through digital channels.',                                                                           summary_hausa:'Matasan Arewacin Najeriya 18-35 suna neman damammakin tattalin arziki ta hanyar dijital.' },
+    { id:'defi-for-agriculture', title:'DeFi for Agriculture',        title_hausa:'DeFi don Noma',                   category:'tech',      leverage:3, status:'concept',   summary:'Smart contract micro-loans for Kano and Kaduna farmers, aligned with Islamic finance principles.',                                                               summary_hausa:'Yarjejeniyar kwamfuta ta bada kananan rance ga manoman Kano da Kaduna bisa ka\'idodin kudi na Musulunci.' },
+    { id:'ai-tools-builders',    title:'AI Tools for Solo Builders',  title_hausa:'Kayan AI don Masu Gina Kadai',   category:'tech',      leverage:4, status:'prototype', summary:'100x leverage tools for solo creators: Claude, Canva AI, ElevenLabs. Building from a single smartphone.',                                                        summary_hausa:'Kayan AI 100x don masu gina kadai — Claude, Canva AI, ElevenLabs. Ana gina daga wayar hannu kadai.' },
+    { id:'kz-brand',             title:'Kimiyyar Zahiri Brand',       title_hausa:'Brand na Kimiyyar Zahiri',       category:'transform', leverage:5, status:'growth',    summary:"Cultural bridge brand rooted in Hausa intellectual tradition, pointing Northern Nigerian youth toward Africa's digital future.",                                   summary_hausa:"Brand wanda ya gina gada tsakanin al'adun Hausa da makomar dijital ta Afirka." },
+    { id:'islamic-finance-defi', title:'Islamic Finance + DeFi',      title_hausa:'Kudin Musulunci da DeFi',        category:'insight',   leverage:3, status:'research',  summary:'Halal financial principles align well with DeFi — no riba, transparent, asset-backed.',                                                                          summary_hausa:'Ka\'idodin kudi na Musulunci suna dacewa da DeFi — babu riba, a bayyane, an goyan baya da dukiya.' },
+    { id:'content-engine',       title:'3-Layer Content Engine',      title_hausa:'Injin Abun Ciki na Mataki-3',    category:'transform', leverage:3, status:'prototype', summary:'Cornerstone → Derivative → Reactive content system. One idea becomes a full week of cross-platform posts.',                                                       summary_hausa:'Tsari na Cornerstone → Derivative → Reactive. Ra\'ayi daya ya zama mako gaba daya a dandamali daban-daban.' },
+    { id:'cloud-infrastructure', title:'Cloud Infrastructure Basics', title_hausa:'Tushen Samar da Ayyuka ta Girgije', category:'tech',   leverage:4, status:'concept',   summary:'AWS, GCP, and Azure fundamentals for Nigerian builders. With African data centers now active, cloud literacy is critical.',                                        summary_hausa:'Tushen AWS, GCP, da Azure don masu gina a Najeriya. Matakan girgije yanzu suna da muhimmanci.' },
+    { id:'cybersecurity-nigeria',title:'Cybersecurity for Arewa',     title_hausa:'Tsaron Yanar Gizo a Arewa',      category:'trust',     leverage:5, status:'research',  summary:'Nigeria loses $500M+ annually to cybercrime. Phishing, SIM swap — understanding threats is a survival skill.',                                                  summary_hausa:'Najeriya na asarar dala miliyan 500+ kowace shekara. Koyar da tsaron yanar gizo yana da muhimmanci.' },
+    { id:'data-privacy-ndpr',    title:'Data Privacy & NDPR',         title_hausa:'Sirrin Bayanai da Doka NDPR',    category:'trust',     leverage:4, status:'research',  summary:"Nigeria's Data Protection Regulation (NDPR 2019) and emerging Africa data sovereignty framework.",                                                             summary_hausa:"Dokar NDPR ta 2019 ta Najeriya da tsarin mulkin bayanai na Afirka. Muhimmanci ga kowane mai gina dandali." },
+    { id:'nigeria-fintech-api',  title:'Nigeria Fintech API Layer',   title_hausa:'Hanyar API ta Fasahar Kudi',     category:'tech',      leverage:5, status:'prototype', summary:'Paystack, Flutterwave, Mono — Nigeria\'s fintech API ecosystem gives instant access to 200M+ Nigerians.',                                                      summary_hausa:'Paystack, Flutterwave, Mono — API na fasahar kudi ta Najeriya yana ba da hanya zuwa Nijeriyawa miliyan 200+.' },
+    { id:'digital-identity',     title:'Digital Identity Systems',    title_hausa:'Tsarin Tantancewa na Dijital',   category:'tech',      leverage:4, status:'research',  summary:'NIN, BVN, and decentralized identity (DID) — the foundation layer for fintech, healthcare, and e-government products.',                                       summary_hausa:'NIN, BVN, da DID — tushen ganowa na dijital wanda ke goyan bayan fasahar kudi, lafiya, da gwamnatin e.' },
+  ];
+  const SEED_EDGES = [
+    {from:'blockchain-nigeria',   to:'defi-for-agriculture',  label:'enables'},
+    {from:'blockchain-nigeria',   to:'crypto-trust-deficit',  label:'relates_to'},
+    {from:'blockchain-nigeria',   to:'islamic-finance-defi',  label:'relates_to'},
+    {from:'hausa-tech-education', to:'arewa-digital-youth',   label:'enables'},
+    {from:'hausa-tech-education', to:'kz-brand',              label:'builds_on'},
+    {from:'crypto-trust-deficit', to:'arewa-digital-youth',   label:'affects'},
+    {from:'crypto-trust-deficit', to:'islamic-finance-defi',  label:'relates_to'},
+    {from:'arewa-digital-youth',  to:'kz-brand',              label:'drives'},
+    {from:'defi-for-agriculture', to:'blockchain-nigeria',    label:'implements'},
+    {from:'defi-for-agriculture', to:'islamic-finance-defi',  label:'relates_to'},
+    {from:'ai-tools-builders',    to:'content-engine',        label:'enables'},
+    {from:'ai-tools-builders',    to:'hausa-tech-education',  label:'supports'},
+    {from:'kz-brand',             to:'content-engine',        label:'requires'},
+    {from:'kz-brand',             to:'arewa-digital-youth',   label:'serves'},
+    {from:'islamic-finance-defi', to:'defi-for-agriculture',  label:'enables'},
+    {from:'cloud-infrastructure', to:'nigeria-fintech-api',   label:'enables'},
+    {from:'cloud-infrastructure', to:'ai-tools-builders',     label:'supports'},
+    {from:'cybersecurity-nigeria',to:'crypto-trust-deficit',  label:'addresses'},
+    {from:'cybersecurity-nigeria',to:'digital-identity',      label:'requires'},
+    {from:'data-privacy-ndpr',    to:'nigeria-fintech-api',   label:'regulates'},
+    {from:'nigeria-fintech-api',  to:'defi-for-agriculture',  label:'enables'},
+    {from:'nigeria-fintech-api',  to:'arewa-digital-youth',   label:'serves'},
+    {from:'digital-identity',     to:'nigeria-fintech-api',   label:'underpins'},
+    {from:'digital-identity',     to:'defi-for-agriculture',  label:'enables'},
+  ];
+
+  const existIds = new Set(nodes.map(n => n.id));
+  let added = 0;
+  SEED_NODES.forEach(n => {
+    if (!existIds.has(n.id)) {
+      ensureNode(n); nodes.push(n); added++;
+    }
+  });
+  const existEdgeIds = new Set(edges.map(e => e.from+'_'+e.to));
+  SEED_EDGES.forEach(e => {
+    if (!existEdgeIds.has(e.from+'_'+e.to)) {
+      edges.push({ id: e.from+'_'+e.to, from: e.from, to: e.to, label: e.label, strength: 1 });
+    }
+  });
+
+  save(); renderGraph(); renderNodeList(); updateStats();
+  [1,2,3,4,5].forEach(n => pi(n,'done'));
+  ['ingest','embed','graph','explore','act'].forEach(s => pipe(s,'done'));
+  feedback(`Seed loaded — ${added} new nodes · 14 total · click any node to explore`);
+  toast('✓ 14 KZ knowledge nodes loaded');
+  setTimeout(() => selectNode('arewa-digital-youth'), 800);
+}
+
+/* ══════════════════════════════════════
+   KEYBOARD SHORTCUTS
+══════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  const active = document.activeElement;
+  const typing = active.tagName==='INPUT' || active.tagName==='TEXTAREA' || active.contentEditable==='true';
+  if (e.key === 'Escape') {
+    ['newModal','settingsModal'].forEach(id => closeModal(id));
+    closeExp(); closeAI(); closeROut();
+    document.getElementById('sMenu').classList.remove('open');
+    document.getElementById('pickerMenu')?.classList.remove('open');
+  }
+  if (!typing) {
+    if ((e.metaKey||e.ctrlKey) && e.key==='s') { e.preventDefault(); const n=getActive(); if(n){n.summary=document.getElementById('fSum').value;n.updatedAt=new Date().toISOString();save();toast('✓ Saved');} }
+    if ((e.metaKey||e.ctrlKey) && e.key==='Enter') research();
+    const map = { r:'research', l:'learn', a:'automate', c:'content', t:'track' };
+    if (map[e.key.toLowerCase()]) { e.preventDefault(); runAction(map[e.key.toLowerCase()]); }
+  }
+});
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('sRing')?.contains(e.target)) document.getElementById('sMenu')?.classList.remove('open');
+  const pm = document.getElementById('pickerMenu');
+  if (pm && !document.getElementById('pickerWrap')?.contains(e.target)) pm.classList.remove('open');
+});
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  initGraph();
+  updateConnStatus();
+  nodes.forEach(n => ensureNode(n));
+  updateStats();
+  renderNodeList();
+  if (nodes.length > 0) {
+    renderGraph();
+    document.getElementById('gEmpty').style.display = 'none';
+    [1,2,3,4,5].forEach(n => pi(n,'done'));
+    ['ingest','embed','graph','explore'].forEach(s => pipe(s,'done'));
+    setTimeout(() => {
+      selectNode(nodes[0].id);
+      fitGraph();
+    }, 500);
+  }
+});
+
+window.addEventListener('resize', () => { if (network && nodes.length) fitGraph(); });
+</script>
 </body>
 </html>
